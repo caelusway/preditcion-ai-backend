@@ -1,10 +1,12 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Install build dependencies (includes OpenSSL for Prisma engines)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends build-essential python3 openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package.json package-lock.json ./
@@ -21,20 +23,23 @@ RUN npx prisma generate
 # Build TypeScript
 RUN npx tsc --noCheck
 
+# Remove dev dependencies to keep runtime image slim
+RUN npm prune --omit=dev
+
 # Production stage
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
-RUN apk add --no-cache python3 make g++
+# Install runtime dependencies required by Prisma
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl \
+  && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
+# Copy package files and node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
-
-# Install production dependencies fresh (to ensure they work on this platform)
-RUN npm ci --only=production
+COPY --from=builder /app/node_modules ./node_modules
 
 # Copy prisma and dist from builder
 COPY --from=builder /app/prisma ./prisma
