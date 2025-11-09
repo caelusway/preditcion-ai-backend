@@ -24,7 +24,7 @@ services:
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-15m}
       REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-30d}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:19000,http://localhost:8081}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://decentralabs.tech}
       EMAIL_FROM: ${EMAIL_FROM:-noreply@yourdomain.com}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
