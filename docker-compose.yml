@@ -2,13 +2,11 @@ version: '3.8'
 
 services:
   app:
+    image: ${IMAGE:-football-api:latest}
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: football-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
