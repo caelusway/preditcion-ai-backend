@@ -124,7 +124,7 @@ export class FootballAPIService {
         );
       }
 
-      const data: APIFootballResponse<T> = await response.json();
+      const data = await response.json() as APIFootballResponse<T>;
 
       if (data.errors && data.errors.length > 0) {
         throw new Error(`API errors: ${JSON.stringify(data.errors)}`);
