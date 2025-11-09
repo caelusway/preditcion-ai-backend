@@ -30,15 +30,14 @@ WORKDIR /app
 # Install runtime dependencies for native modules
 RUN apk add --no-cache python3 make g++
 
-# Copy package files and lock file
+# Copy package files
 COPY package.json package-lock.json ./
-COPY prisma ./prisma/
 
-# Install ALL dependencies (including dev, but that's okay for simplicity)
-RUN npm ci
+# Copy node_modules from builder (already has everything installed)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Generate Prisma client
-RUN npx prisma generate
+# Copy prisma schema
+COPY --from=builder /app/prisma ./prisma
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
