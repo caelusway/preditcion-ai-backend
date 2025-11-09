@@ -16,6 +16,8 @@ services:
       - "coolify.managed=true"
       - "coolify.name=football-api"
       - "coolify.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.services.football-api.loadbalancer.server.port=3000"
     environment:
       NODE_ENV: production
       PORT: 3000
