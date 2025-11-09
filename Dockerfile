@@ -34,14 +34,11 @@ RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install all dependencies first
-RUN npm ci
+# Install ONLY production dependencies directly
+RUN npm ci --omit=dev
 
 # Generate Prisma client
 RUN npx prisma generate
-
-# Remove devDependencies
-RUN npm prune --omit=dev
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
