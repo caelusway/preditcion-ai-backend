@@ -6,12 +6,12 @@ WORKDIR /app
 # Install build dependencies for native modules (argon2, etc.)
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and lock file
+COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
 # Install dependencies
-RUN npm install --frozen-lockfile
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -30,8 +30,8 @@ WORKDIR /app
 # Install runtime dependencies for native modules
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
-COPY package*.json ./
+# Copy package files and lock file
+COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
 # Install all dependencies first
