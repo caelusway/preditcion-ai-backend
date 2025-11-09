@@ -1,10 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
-import { env } from './config/env';
 import { swaggerSpec } from './config/swagger';
-import { authLimiter, generalLimiter } from './middleware/rateLimits';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 // Routes
@@ -16,37 +13,12 @@ import healthRoutes from './routes/health.routes';
 
 const app = express();
 
-// Security middleware - configure helmet to allow Swagger UI
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-        scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
-        imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net"],
-      },
-    },
-  })
-);
-
-// CORS configuration
-app.use(
-  cors({
-    origin: env.CORS_ORIGINS,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false,
-  })
-);
+// CORS - Allow all origins (fully public)
+app.use(cors());
 
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting
-app.use('/auth', authLimiter);
-app.use(generalLimiter);
 
 // API Documentation
 app.get('/docs.json', (_req, res) => {
