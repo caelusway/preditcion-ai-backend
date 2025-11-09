@@ -42,6 +42,9 @@ COPY --from=builder /app/prisma ./prisma
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
 
+# Debug: verify node_modules exists
+RUN ls -la /app/node_modules | head -20 && echo "Express check:" && ls /app/node_modules | grep express || echo "EXPRESS NOT FOUND!"
+
 # Expose port
 EXPOSE 3000
 
