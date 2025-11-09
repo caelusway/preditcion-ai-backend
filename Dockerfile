@@ -20,8 +20,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client (placeholder DATABASE_URL for build time)
+RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 
 # Build TypeScript
 RUN npm run build
@@ -51,8 +51,8 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
 
-# Generate Prisma client for this platform
-RUN npx prisma generate
+# Generate Prisma client for this platform (placeholder DATABASE_URL for build time)
+RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 
 # Expose port
 EXPOSE 3000
