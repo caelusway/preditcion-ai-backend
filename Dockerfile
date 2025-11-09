@@ -34,14 +34,11 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install all dependencies (needed for Prisma CLI)
-RUN npm install --frozen-lockfile
+# Install production dependencies only
+RUN npm install --frozen-lockfile --omit=dev
 
 # Generate Prisma client
 RUN npx prisma generate
-
-# Remove dev dependencies
-RUN npm prune --omit=dev && npm cache clean --force
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
@@ -54,4 +51,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s \
   CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start server (run migrations first)
+# Note: Ensure the database specified in DATABASE_URL exists before running migrations
+# You can create it manually in your PostgreSQL instance with: CREATE DATABASE your_db_name;
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

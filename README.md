@@ -391,31 +391,20 @@ const retryAfter = response.headers['retry-after']; // in seconds
 
 ## Deployment
 
-### Coolify Deployment
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive production deployment instructions.
 
-1. Create new service in Coolify
-2. Connect GitHub repository
-3. Set build pack to Dockerfile
-4. Configure environment variables in Coolify dashboard
-5. Set up PostgreSQL database (managed or external)
-6. Deploy
-7. Migrations run automatically on container start
+### Quick Start
 
-### Manual Docker Deployment
+1. **Create PostgreSQL database manually first:**
+   ```sql
+   CREATE DATABASE football;
+   ```
 
-```bash
-# Build image
-docker build -t football-prediction-api .
+2. **Set environment variables** (see DEPLOYMENT.md for full list)
 
-# Run container
-docker run -d \
-  -p 3000:3000 \
-  -e DATABASE_URL="postgresql://..." \
-  -e JWT_SECRET="..." \
-  -e JWT_REFRESH_SECRET="..." \
-  --name football-api \
-  football-prediction-api
-```
+3. **Deploy** - migrations run automatically on container start
+
+For detailed steps, troubleshooting, and production best practices, refer to [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ## Security Best Practices
 
