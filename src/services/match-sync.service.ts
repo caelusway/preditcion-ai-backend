@@ -27,7 +27,7 @@ export class MatchSyncService {
       logger.info({ count: apiTeams.length }, 'Fetched teams from API');
 
       for (const apiTeam of apiTeams) {
-        const teamData = apiTeam.team || apiTeam;
+        const teamData = (apiTeam as any).team || apiTeam;
 
         await prisma.team.upsert({
           where: { apiId: teamData.id.toString() },

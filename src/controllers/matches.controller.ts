@@ -57,7 +57,7 @@ export class MatchesController {
       // Return paginated response
       const response = createPaginatedResponse(matches, page, limit, totalCount);
 
-      res.status(200).json(response);
+      return res.status(200).json(response);
     } catch (error) {
       next(error);
     }
@@ -104,7 +104,7 @@ export class MatchesController {
         { id: match.awayTeam.id, name: match.awayTeam.name }
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         ...match,
         prediction: {
           id: `pred-${match.id}`,

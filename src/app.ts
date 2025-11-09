@@ -38,7 +38,7 @@ app.use('/auth', authLimiter);
 app.use(generalLimiter);
 
 // API Documentation
-app.get('/docs.json', (req, res) => {
+app.get('/docs.json', (_req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });

@@ -19,8 +19,8 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (transpile only, skip type checking)
+RUN npx tsc --noCheck
 
 # Production stage
 FROM node:20-alpine

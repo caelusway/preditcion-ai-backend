@@ -77,7 +77,6 @@ function getTeamStrength(teamName: string): number {
 
 // Generate random form
 function generateForm(): string[] {
-  const outcomes = ['W', 'D', 'L'];
   const form: string[] = [];
   for (let i = 0; i < 5; i++) {
     const rand = Math.random();
@@ -216,8 +215,8 @@ function generateAnalysis(
   awayName: string,
   homeWinProb: number,
   awayWinProb: number,
-  homeStrength: number,
-  awayStrength: number,
+  _homeStrength: number,
+  _awayStrength: number,
   confidence: string
 ): string {
   const templates = [];
