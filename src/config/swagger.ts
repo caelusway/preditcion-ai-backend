@@ -16,8 +16,10 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: '/',
-        description: 'API Server',
+        url: env.NODE_ENV === 'production'
+          ? 'https://decentralabs.tech'
+          : `http://localhost:${env.PORT}`,
+        description: env.NODE_ENV === 'production' ? 'Production Server' : 'Development Server',
       },
     ],
     components: {
