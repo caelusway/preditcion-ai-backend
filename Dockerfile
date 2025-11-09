@@ -28,11 +28,14 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install production dependencies only
-RUN npm ci --omit=dev && npm cache clean --force
+# Install all dependencies (needed for Prisma CLI)
+RUN npm ci
 
-# Generate Prisma client for production
+# Generate Prisma client
 RUN npx prisma generate
+
+# Remove dev dependencies
+RUN npm prune --omit=dev && npm cache clean --force
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
