@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json - DO NOT ignore this! It's needed for production builds
 yarn.lock
 pnpm-lock.yaml
 ezgif-split
