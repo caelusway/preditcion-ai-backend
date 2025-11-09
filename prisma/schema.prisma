@@ -1,0 +1,309 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  name          String?
+  surname       String?
+  emailVerified Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  refreshTokens           RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  predictions             Prediction[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Device metadata
+  device    String?
+  ip        String?
+  userAgent String?
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  apiId     String?  @unique  // External API ID from RapidAPI
+  logoUrl   String?
+  country   String?
+  league    String?
+
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
+  standings   Standing[]
+  players     PlayerStats[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teams")
+}
+
+model Match {
+  id              String    @id @default(uuid())
+  apiId           String?   @unique  // External API ID
+  homeTeamId      String
+  awayTeamId      String
+  kickoffTime     DateTime
+  status          String    // upcoming, live, finished
+  homeScore       Int?
+  awayScore       Int?
+  venue           String?
+  referee         String?
+  league          String?
+  season          String?
+  round           String?
+  externalData    Json?     // Store complete API response for reference
+
+  homeTeam        Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam        Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  predictions     Prediction[]
+  statistics      MatchStatistics?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([status])
+  @@index([kickoffTime])
+  @@map("matches")
+}
+
+model Prediction {
+  id                    String   @id @default(uuid())
+  matchId               String
+  userId                String?  // null for AI-generated predictions
+
+  homeWinProbability    Float
+  drawProbability       Float
+  awayWinProbability    Float
+
+  predictedHomeScore    Float?
+  predictedAwayScore    Float?
+
+  confidence            String   // High, Medium, Low
+  aiModel               String?  // "gpt-4", "claude-3.5-sonnet", etc.
+  reasoning             String   @db.Text
+
+  // Factors used in prediction
+  factors               Json?    // Store detailed analysis factors
+
+  match                 Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user                  User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+
+  @@index([matchId])
+  @@index([userId])
+  @@map("predictions")
+}
+
+model MatchStatistics {
+  id                String   @id @default(uuid())
+  matchId           String   @unique
+
+  // Team form (last 5-10 games) - W/D/L counts
+  homeFormW         Int      @default(0)
+  homeFormD         Int      @default(0)
+  homeFormL         Int      @default(0)
+  awayFormW         Int      @default(0)
+  awayFormD         Int      @default(0)
+  awayFormL         Int      @default(0)
+
+  // Recent form strings (e.g., "WWDLW")
+  homeFormString    String?
+  awayFormString    String?
+
+  // Goals in last N games
+  homeGoalsScored   Int      @default(0)
+  homeGoalsConceded Int      @default(0)
+  awayGoalsScored   Int      @default(0)
+  awayGoalsConceded Int      @default(0)
+
+  // Expected goals (xG)
+  homeExpectedGoals Float?
+  awayExpectedGoals Float?
+
+  // Head to head history
+  h2hHomeWins       Int      @default(0)
+  h2hDraws          Int      @default(0)
+  h2hAwayWins       Int      @default(0)
+  h2hTotalMatches   Int      @default(0)
+
+  // Team condition
+  homeInjuries      Int      @default(0)
+  awayInjuries      Int      @default(0)
+
+  // Additional stats from API
+  rawData           Json?    // Store complete statistics from API
+
+  match             Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("match_statistics")
+}
+
+model Standing {
+  id                String   @id @default(uuid())
+  teamId            String
+  season            String
+  league            String   @default("Premier League")
+
+  // League position
+  rank              Int
+  points            Int
+  goalsDiff         Int
+
+  // Match statistics
+  played            Int
+  wins              Int
+  draws             Int
+  losses            Int
+  goalsFor          Int
+  goalsAgainst      Int
+
+  // Home/Away split
+  homePlayed        Int
+  homeWins          Int
+  homeDraws         Int
+  homeLosses        Int
+  homeGoalsFor      Int
+  homeGoalsAgainst  Int
+
+  awayPlayed        Int
+  awayWins          Int
+  awayDraws         Int
+  awayLosses        Int
+  awayGoalsFor      Int
+  awayGoalsAgainst  Int
+
+  // Recent form (e.g., "WWDLW")
+  form              String?
+  description       String?  // "Champions League", "Relegation", etc.
+
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([teamId, season])
+  @@index([season])
+  @@index([rank])
+  @@map("standings")
+}
+
+model PlayerStats {
+  id                String   @id @default(uuid())
+  apiId             String   @unique  // Player ID from API-Football
+  teamId            String
+  season            String
+  league            String   @default("Premier League")
+
+  // Player info
+  name              String
+  firstname         String?
+  lastname          String?
+  age               Int?
+  nationality       String?
+  photo             String?
+  position          String?  // Attacker, Midfielder, Defender, Goalkeeper
+
+  // Appearance stats
+  appearences       Int      @default(0)
+  lineups           Int      @default(0)
+  minutes           Int      @default(0)
+  rating            Float?
+
+  // Offensive stats
+  goals             Int      @default(0)
+  assists           Int      @default(0)
+  shots             Int      @default(0)
+  shotsOn           Int      @default(0)
+
+  // Penalty stats
+  penaltyScored     Int      @default(0)
+  penaltyMissed     Int      @default(0)
+
+  // Other stats
+  passes            Int      @default(0)
+  keyPasses         Int      @default(0)
+  tackles           Int      @default(0)
+  duelsWon          Int      @default(0)
+  dribblesSuccess   Int      @default(0)
+  foulsDrawn        Int      @default(0)
+  foulsCommitted    Int      @default(0)
+
+  // Cards
+  yellowCards       Int      @default(0)
+  redCards          Int      @default(0)
+
+  // Raw data from API
+  rawData           Json?
+
+  team              Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([apiId, season])
+  @@index([teamId])
+  @@index([season])
+  @@index([goals])
+  @@index([assists])
+  @@map("player_stats")
+}
