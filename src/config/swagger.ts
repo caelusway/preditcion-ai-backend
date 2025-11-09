@@ -17,7 +17,7 @@ const options: swaggerJsdoc.Options = {
     servers: [
       {
         url: env.NODE_ENV === 'production'
-          ? 'https://api.yourdomain.com'
+          ? 'https://decentralabs.tech'
           : `http://localhost:${env.PORT}`,
         description: env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
