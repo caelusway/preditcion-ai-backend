@@ -29,12 +29,19 @@ WORKDIR /app
 # Install runtime dependencies
 RUN apk add --no-cache python3 make g++
 
-# Copy everything from builder
+# Copy package files
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
-COPY --from=builder /app/node_modules ./node_modules
+
+# Install production dependencies fresh (to ensure they work on this platform)
+RUN npm ci --only=production
+
+# Copy prisma and dist from builder
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/dist ./dist
+
+# Generate Prisma client for this platform
+RUN npx prisma generate
 
 # Expose port
 EXPOSE 3000
