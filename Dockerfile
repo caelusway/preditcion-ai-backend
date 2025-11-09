@@ -3,8 +3,8 @@ FROM node:23-slim AS builder
 
 WORKDIR /app
 
-# Ensure dev dependencies are installed for build-time tooling
-ENV NODE_ENV=development
+# Don't set NODE_ENV yet - we'll set it properly for production build
+# This ensures TypeScript and build tools are available without affecting runtime config
 
 # Install build dependencies (includes OpenSSL for Prisma engines)
 RUN apt-get update \
@@ -23,8 +23,8 @@ COPY . .
 # Generate Prisma client (placeholder DATABASE_URL for build time)
 RUN DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" npx prisma generate
 
-# Build TypeScript
-RUN npm run build
+# Build TypeScript (set NODE_ENV=production to ensure correct runtime config)
+RUN NODE_ENV=production npm run build
 
 # Remove dev dependencies to keep runtime image slim
 RUN npm prune --omit=dev
