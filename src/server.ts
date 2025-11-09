@@ -13,10 +13,14 @@ async function startServer() {
 
     // Start server - bind to 0.0.0.0 to accept external connections
     const server = app.listen(PORT, '0.0.0.0', () => {
+      const baseUrl = env.NODE_ENV === 'production'
+        ? 'https://decentralabs.tech'
+        : `http://localhost:${PORT}`;
+
       logger.info(`
 🚀 Server running on port ${PORT}
-📝 API Docs: http://localhost:${PORT}/docs
-🏥 Health check: http://localhost:${PORT}/health
+📝 API Docs: ${baseUrl}/docs
+🏥 Health check: ${baseUrl}/health
 🌍 Environment: ${env.NODE_ENV}
       `);
     });
