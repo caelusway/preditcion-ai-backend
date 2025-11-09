@@ -21,7 +21,7 @@ COPY . .
 RUN npx prisma generate
 
 # Build TypeScript
-RUN npx tsc --noCheck
+RUN npm run build
 
 # Remove dev dependencies to keep runtime image slim
 RUN npm prune --omit=dev
