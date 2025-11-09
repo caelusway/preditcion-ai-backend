@@ -15,7 +15,7 @@ async function startServer() {
     const server = app.listen(PORT, '0.0.0.0', () => {
       const baseUrl = env.NODE_ENV === 'production'
         ? 'https://decentralabs.tech'
-        : `http://localhost:${PORT}`;
+        : `https://decentralabs.tech`;
 
       logger.info(`
 🚀 Server running on port ${PORT}
