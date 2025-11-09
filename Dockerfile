@@ -3,6 +3,9 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
+# Ensure dev dependencies are installed for build-time tooling
+ENV NODE_ENV=development
+
 # Install build dependencies (includes OpenSSL for Prisma engines)
 RUN apt-get update \
   && apt-get install -y --no-install-recommends build-essential python3 openssl \
