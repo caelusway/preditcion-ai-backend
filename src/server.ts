@@ -11,8 +11,8 @@ async function startServer() {
     await prisma.$connect();
     logger.info('✅ Database connected successfully');
 
-    // Start server
-    const server = app.listen(PORT, () => {
+    // Start server - bind to 0.0.0.0 to accept external connections
+    const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`
 🚀 Server running on port ${PORT}
 📝 API Docs: http://localhost:${PORT}/docs
