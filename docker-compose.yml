@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Application
   app:
     build:
       context: .
@@ -10,8 +9,6 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    networks:
-      - coolify
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -34,7 +31,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-networks:
-  coolify:
-    external: true
