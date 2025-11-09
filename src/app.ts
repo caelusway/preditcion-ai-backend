@@ -16,8 +16,19 @@ import healthRoutes from './routes/health.routes';
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware - configure helmet to allow Swagger UI
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        scriptSrc: ["'self'", "https://cdn.jsdelivr.net"],
+        imgSrc: ["'self'", "data:", "https://cdn.jsdelivr.net"],
+      },
+    },
+  })
+);
 
 // CORS configuration
 app.use(
