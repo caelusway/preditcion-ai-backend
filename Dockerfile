@@ -31,6 +31,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Default to production runtime settings
+ENV NODE_ENV=production
+
 # Install runtime dependencies required by Prisma
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl \
