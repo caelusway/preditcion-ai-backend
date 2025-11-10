@@ -320,7 +320,7 @@ model SavedMatch {
   notes     String?  // User can add personal notes
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  match     Match?   @relation(fields: [matchId], references: [id], onDelete: Cascade)
   team      Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())

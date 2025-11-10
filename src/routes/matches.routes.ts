@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { matchesController } from '../controllers/matches.controller';
-import { requireAuth } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -11,8 +10,6 @@ const router = Router();
  *     tags:
  *       - Matches
  *     summary: Get list of matches (paginated)
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: page
@@ -69,7 +66,7 @@ const router = Router();
  *       401:
  *         description: Unauthorized
  */
-router.get('/', requireAuth, matchesController.getMatches);
+router.get('/', matchesController.getMatches);
 
 /**
  * @swagger
@@ -78,8 +75,6 @@ router.get('/', requireAuth, matchesController.getMatches);
  *     tags:
  *       - Matches
  *     summary: Get match details with prediction
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -95,6 +90,6 @@ router.get('/', requireAuth, matchesController.getMatches);
  *       404:
  *         description: Match not found
  */
-router.get('/:id', requireAuth, matchesController.getMatchById);
+router.get('/:id', matchesController.getMatchById);
 
 export default router;

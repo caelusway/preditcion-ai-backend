@@ -25,7 +25,17 @@ export class MatchesController {
         }
 
         matches = matches.slice(0, limit);
-        return res.status(200).json({ matches });
+        return res.status(200).json({
+          data: matches,
+          pagination: {
+            currentPage: 1,
+            itemsPerPage: matches.length,
+            totalItems: matches.length,
+            totalPages: 1,
+            hasNextPage: false,
+            hasPreviousPage: false
+          }
+        });
       }
 
       // Using database with proper pagination
