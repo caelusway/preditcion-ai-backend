@@ -1,11 +1,15 @@
 #!/bin/bash
 
 # Football Prediction API Deployment Script
-# Run this script on your server after pulling from GitHub
+# Run this script on your server to deploy latest changes
 
 set -e  # Exit on error
 
 echo "🚀 Starting deployment..."
+
+# Pull latest changes from GitHub
+echo "📥 Pulling latest changes from GitHub..."
+git pull origin main
 
 # Load environment variables
 if [ ! -f .env ]; then
@@ -53,6 +57,7 @@ fi
 # Save PM2 configuration
 pm2 save
 
+echo ""
 echo "✅ Deployment completed successfully!"
 echo ""
 echo "📊 Application status:"
@@ -61,4 +66,4 @@ echo ""
 echo "📝 View logs:"
 echo "  pm2 logs football-prediction-api"
 echo ""
-echo "🌐 API should be available at: http://your-server-ip:3000"
+echo "🌐 API is available at: https://decentralabs.tech"
