@@ -73,6 +73,11 @@ export class AuthService {
       throw new AppError(401, 'Invalid email or password');
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      throw new AppError(403, 'Please verify your email before logging in');
+    }
+
     // Create refresh token record
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     const refreshTokenRecord = await prisma.refreshToken.create({
@@ -180,7 +185,7 @@ export class AuthService {
     if (!user) {
       logger.debug({ email }, 'Password reset requested for non-existent email');
       return {
-        message: 'If an account exists with that email, a reset link has been sent.',
+        message: 'If an account exists with that email, a reset code has been sent.',
       };
     }
 
@@ -189,9 +194,9 @@ export class AuthService {
       where: { userId: user.id },
     });
 
-    // Create new reset token
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    // Create new reset token (6-digit numeric code)
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await prisma.passwordResetToken.create({
       data: {
@@ -204,10 +209,30 @@ export class AuthService {
     // Send reset email
     await emailService.sendPasswordResetEmail(email, token);
 
-    logger.info({ userId: user.id }, 'Password reset email sent');
+    logger.info({ userId: user.id }, 'Password reset code sent');
 
     return {
-      message: 'If an account exists with that email, a reset link has been sent.',
+      message: 'If an account exists with that email, a reset code has been sent.',
+    };
+  }
+
+  async verifyResetToken(token: string) {
+    // Find token
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: { token },
+    });
+
+    if (!resetToken) {
+      throw new AppError(400, 'Invalid or expired reset code');
+    }
+
+    if (resetToken.expiresAt < new Date()) {
+      throw new AppError(400, 'Invalid or expired reset code');
+    }
+
+    return {
+      message: 'Reset code is valid',
+      valid: true
     };
   }
 

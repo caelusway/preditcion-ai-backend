@@ -87,6 +87,20 @@ export class AuthController {
     }
   }
 
+  async verifyResetToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { token } = req.body;
+      const result = await authService.verifyResetToken(token);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async resetPassword(
     req: Request<{}, {}, ResetPasswordInput>,
     res: Response,

@@ -24,6 +24,8 @@ model User {
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   predictions             Prediction[]
+  savedMatches            SavedMatch[]
+  userStats               UserStats?
 
   @@map("users")
 }
@@ -84,6 +86,7 @@ model Team {
   awayMatches Match[] @relation("AwayTeam")
   standings   Standing[]
   players     PlayerStats[]
+  savedMatches SavedMatch[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -111,6 +114,7 @@ model Match {
   awayTeam        Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
   predictions     Prediction[]
   statistics      MatchStatistics?
+  savedBy         SavedMatch[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -306,4 +310,55 @@ model PlayerStats {
   @@index([goals])
   @@index([assists])
   @@map("player_stats")
+}
+
+model SavedMatch {
+  id        String   @id @default(uuid())
+  userId    String
+  matchId   String
+  teamId    String?  // Optional: which team the user is following in this match
+  notes     String?  // User can add personal notes
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team      Team?    @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, matchId])
+  @@index([userId])
+  @@index([matchId])
+  @@map("saved_matches")
+}
+
+model UserStats {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+
+  // Prediction Statistics
+  totalPredictions      Int      @default(0)
+  correctPredictions    Int      @default(0)
+  wrongPredictions      Int      @default(0)
+
+  // Accuracy rates
+  accuracyRate          Float    @default(0)  // Overall accuracy percentage
+
+  // Streak tracking
+  currentStreak         Int      @default(0)  // Current correct prediction streak
+  longestStreak         Int      @default(0)  // Longest correct prediction streak ever
+
+  // Match watching statistics
+  totalMatchesWatched   Int      @default(0)  // Matches user marked as watched
+  favoriteTeamId        String?  // Most followed team
+
+  // Activity tracking
+  lastPredictionAt      DateTime?
+  lastActive            DateTime @default(now())
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("user_stats")
 }

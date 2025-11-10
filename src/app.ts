@@ -10,6 +10,8 @@ import userRoutes from './routes/user.routes';
 import matchesRoutes from './routes/matches.routes';
 import insightsRoutes from './routes/insights.routes';
 import healthRoutes from './routes/health.routes';
+import savedMatchRoutes from './routes/saved-match.routes';
+import userStatsRoutes from './routes/user-stats.routes';
 
 const app = express();
 
@@ -36,6 +38,8 @@ app.use('/auth', authRoutes);
 app.use('/me', userRoutes);
 app.use('/matches', matchesRoutes);
 app.use('/insights', insightsRoutes);
+app.use('/saved-matches', savedMatchRoutes);
+app.use('/stats', userStatsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

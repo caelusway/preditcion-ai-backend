@@ -162,6 +162,36 @@ router.post(
 
 /**
  * @swagger
+ * /auth/verify-reset-token:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Verify password reset token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *       400:
+ *         description: Invalid or expired token
+ */
+router.post(
+  '/verify-reset-token',
+  authController.verifyResetToken
+);
+
+/**
+ * @swagger
  * /auth/reset-password:
  *   post:
  *     tags:
@@ -179,6 +209,7 @@ router.post(
  *             properties:
  *               token:
  *                 type: string
+ *                 example: "123456"
  *               newPassword:
  *                 type: string
  *                 format: password
