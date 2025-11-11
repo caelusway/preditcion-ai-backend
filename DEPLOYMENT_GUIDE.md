@@ -94,7 +94,18 @@ GENERAL_RATE_LIMIT=300
 chmod +x deploy.sh
 ```
 
-### 4. Run Initial Deployment
+### 4. Populate Dummy Match Data
+
+```bash
+npm run populate
+```
+
+This will populate the database with:
+- 17 teams (Leicester, Everton, Manchester United, Liverpool, etc.)
+- 11 matches (2 live, 5 upcoming, 4 finished)
+- AI predictions for all matches
+
+### 5. Run Initial Deployment
 
 ```bash
 ./deploy.sh

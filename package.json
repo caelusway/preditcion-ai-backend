@@ -12,6 +12,7 @@
     "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
+    "populate": "tsx scripts/populate-dummy-data.ts",
     "sync": "tsx scripts/sync-football-data.ts",
     "sync:teams": "tsx scripts/sync-football-data.ts teams",
     "sync:fixtures": "tsx scripts/sync-football-data.ts fixtures",
