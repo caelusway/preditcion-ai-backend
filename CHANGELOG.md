@@ -155,6 +155,11 @@ Response: {
 - Routes: `src/routes/saved-match.routes.ts`
 - Added to `app.ts` as `/saved-matches`
 
+### Fix for Dummy Data Support:
+- Created migration `20251110224416_drop_saved_matches_fk` to drop FK constraints
+- Allows saving matches with dummy data IDs (e.g., "match-live-1")
+- Foreign keys on `matchId` and `teamId` removed to support both dummy and database modes
+
 ---
 
 ## 8. ✅ User Stats for Profile Page

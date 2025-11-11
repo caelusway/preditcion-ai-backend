@@ -2,7 +2,7 @@ import { prisma } from '../lib/prisma';
 import { AppError } from '../types/common.types';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
-import { dummyMatches } from '../data/matches.dummy';
+import { dummyMatches, dummyPredictions } from '../data/matches.dummy';
 
 export class SavedMatchService {
   async saveMatch(userId: string, matchId: string, teamId?: string, notes?: string) {
@@ -56,9 +56,15 @@ export class SavedMatchService {
 
     // Return with match data if using database, simple response for dummy
     if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+      const match = dummyMatches.find(m => m.id === matchId);
+      const prediction = match ? (dummyPredictions[matchId] || dummyPredictions[match.predictionId]) : null;
+
       return {
         ...savedMatch,
-        match: dummyMatches.find(m => m.id === matchId)
+        match: match ? {
+          ...match,
+          prediction,
+        } : null,
       };
     }
 
@@ -112,6 +118,38 @@ export class SavedMatchService {
   }
 
   async getSavedMatches(userId: string, status?: string) {
+    // For dummy data mode, we need to manually build the response
+    if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+      const savedMatches = await prisma.savedMatch.findMany({
+        where: { userId },
+      });
+
+      // Map saved matches with dummy data
+      const enrichedMatches = savedMatches
+        .map(saved => {
+          const match = dummyMatches.find(m => m.id === saved.matchId);
+          if (!match) return null;
+
+          // Filter by status if provided
+          if (status && match.status !== status) return null;
+
+          // Get prediction for this match
+          const prediction = dummyPredictions[saved.matchId] || dummyPredictions[match.predictionId];
+
+          return {
+            ...saved,
+            match: {
+              ...match,
+              prediction,
+            },
+          };
+        })
+        .filter(Boolean); // Remove null entries
+
+      return enrichedMatches;
+    }
+
+    // Database mode - original logic
     const where: any = { userId };
 
     if (status) {
