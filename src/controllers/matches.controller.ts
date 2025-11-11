@@ -95,12 +95,17 @@ export class MatchesController {
         });
       }
 
-      // Using real database - fetch match with teams
+      // Using real database - fetch match with teams and predictions
       const match = await prisma.match.findUnique({
         where: { id },
         include: {
           homeTeam: true,
           awayTeam: true,
+          predictions: {
+            where: { userId: null }, // AI predictions only
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
         },
       });
 
@@ -108,18 +113,31 @@ export class MatchesController {
         throw new AppError(404, 'Match not found');
       }
 
-      // Generate prediction dynamically
-      const prediction = generatePrediction(
-        { id: match.homeTeam.id, name: match.homeTeam.name },
-        { id: match.awayTeam.id, name: match.awayTeam.name }
-      );
+      // Use stored prediction if available, otherwise generate dynamically
+      let prediction;
+      if (match.predictions && match.predictions.length > 0) {
+        const dbPrediction = match.predictions[0];
+        prediction = {
+          id: dbPrediction.id,
+          homeWinProbability: dbPrediction.homeWinProbability,
+          drawProbability: dbPrediction.drawProbability,
+          awayWinProbability: dbPrediction.awayWinProbability,
+          aiConfidence: dbPrediction.confidence,
+          aiAnalysis: dbPrediction.reasoning,
+          quickStats: dbPrediction.factors,
+        };
+      } else {
+        // Fallback: generate prediction dynamically
+        prediction = generatePrediction(
+          { id: match.homeTeam.id, name: match.homeTeam.name },
+          { id: match.awayTeam.id, name: match.awayTeam.name }
+        );
+        prediction.id = `pred-${match.id}`;
+      }
 
       return res.status(200).json({
         ...match,
-        prediction: {
-          id: `pred-${match.id}`,
-          ...prediction,
-        },
+        prediction,
       });
     } catch (error) {
       next(error);
