@@ -1,7 +1,36 @@
-# Backend Updates - November 10, 2025
+# Backend Updates - November 11, 2025
 
 ## Summary
-Implemented 7 major improvements to the Football Prediction API based on frontend requirements.
+Implemented 7 major improvements to the Football Prediction API + database population script for dummy match data.
+
+---
+
+## ✅ Database Population Script
+
+Created `scripts/populate-dummy-data.ts` to populate the database with realistic match data instead of using dummy mode.
+
+### What it does:
+- Creates 17 Premier League teams with logos
+- Creates 11 matches:
+  - 2 live matches (Leicester vs Everton, Wolves vs Palace)
+  - 5 upcoming matches (Man Utd vs Liverpool, Man City vs Arsenal, etc.)
+  - 4 finished matches with results
+- Creates AI predictions for all matches with:
+  - Win/Draw probabilities
+  - AI confidence level
+  - Detailed analysis
+  - Quick stats (recent form, goals, injuries, head-to-head)
+
+### Usage:
+```bash
+npm run populate
+```
+
+### Why:
+- No need for dummy mode anymore
+- Real database queries for better testing
+- Predictions properly stored and accessible
+- Saved matches work correctly with full prediction data
 
 ---
 
