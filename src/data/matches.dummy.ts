@@ -1,561 +1,459 @@
-export const dummyMatches = [
-  // LIVE MATCHES
-  {
-    id: 'match-live-1',
-    homeTeam: {
-      id: 'team-lei',
-      name: 'Leicester City',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/2/2d/Leicester_City_crest.svg',
-    },
-    awayTeam: {
-      id: 'team-eve',
-      name: 'Everton',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/7/7c/Everton_FC_logo.svg',
-    },
-    kickoffTime: new Date(Date.now() - 45 * 60 * 1000).toISOString(), // Started 45 min ago
-    status: 'live' as const,
-    homeScore: 1,
-    awayScore: 1,
-    aiConfidence: 'Medium' as const,
-    predictionId: 'pred-live-1',
-  },
-  {
-    id: 'match-live-2',
-    homeTeam: {
-      id: 'team-wol',
-      name: 'Wolverhampton',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/f/fc/Wolverhampton_Wanderers.svg',
-    },
-    awayTeam: {
-      id: 'team-cry',
-      name: 'Crystal Palace',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/a/a2/Crystal_Palace_FC_logo_%282022%29.svg',
-    },
-    kickoffTime: new Date(Date.now() - 25 * 60 * 1000).toISOString(), // Started 25 min ago
-    status: 'live' as const,
-    homeScore: 0,
-    awayScore: 2,
-    aiConfidence: 'Low' as const,
-    predictionId: 'pred-live-2',
-  },
+// Mock data aligned with frontend mockData.json structure
 
-  // UPCOMING MATCHES
+export interface Team {
+  id: string;
+  name: string;
+  apiId: string;
+  logoUrl: string;
+  country: string;
+  league: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Match {
+  id: string;
+  apiId: string;
+  homeTeam: Team;
+  awayTeam: Team;
+  kickoffTime: string;
+  status: 'upcoming' | 'live' | 'finished';
+  homeScore: number;
+  awayScore: number;
+  venue: string;
+  referee: string;
+  league: string;
+  season: string;
+  round: string;
+}
+
+export interface QuickStats {
+  recentForm: {
+    home: string[];
+    away: string[];
+  };
+  goalsLast10: {
+    home: number;
+    away: number;
+  };
+  expectedGoals: {
+    home: number;
+    away: number;
+  };
+  injuries: {
+    home: number;
+    away: number;
+  };
+  headToHead: {
+    homeWins: number;
+    draws: number;
+    awayWins: number;
+  };
+}
+
+export interface Prediction {
+  id: string;
+  homeWinProbability: number;
+  drawProbability: number;
+  awayWinProbability: number;
+  aiConfidence: 'High' | 'Medium' | 'Low';
+  aiAnalysis: string;
+  quickStats: QuickStats;
+}
+
+export interface MatchDetail extends Match {
+  homeTeamId: string;
+  awayTeamId: string;
+  externalData: {
+    goals: { home: number; away: number };
+    score: {
+      halftime: { home: number | null; away: number | null };
+      fulltime: { home: number | null; away: number | null };
+      extratime: { home: number | null; away: number | null };
+      penalty: { home: number | null; away: number | null };
+    };
+    teams: {
+      home: { id: number; name: string; logo: string; winner: boolean | null };
+      away: { id: number; name: string; logo: string; winner: boolean | null };
+    };
+    league: {
+      id: number;
+      name: string;
+      country: string;
+      logo: string;
+      flag: string;
+      season: number;
+      round: string;
+      standings: boolean;
+    };
+    fixture: {
+      id: number;
+      date: string;
+      timestamp: number;
+      timezone: string;
+      status: { long: string; short: string; elapsed: number | null; extra: null };
+      venue: { id: number; name: string; city: string };
+      referee: string;
+      periods: { first: number | null; second: number | null };
+    };
+  };
+  prediction: Prediction;
+}
+
+// Home Stats
+export const homeStats = {
+  predicted: 571,
+  upcoming: 536,
+  won: 23,
+};
+
+// Matches list (for /matches endpoint)
+export const dummyMatches: Match[] = [
   {
-    id: 'match-1',
+    id: '1',
+    apiId: 'api-1',
     homeTeam: {
-      id: 'team-mu',
+      id: 't1',
       name: 'Manchester United',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg',
+      apiId: 'api-t1',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t1.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
     awayTeam: {
-      id: 'team-liv',
+      id: 't14',
       name: 'Liverpool',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
+      apiId: 'api-t14',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t14.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
-    kickoffTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
-    status: 'upcoming' as const,
-    aiConfidence: 'Medium' as const,
-    predictionId: 'pred-1',
-  },
-  {
-    id: 'match-2',
-    homeTeam: {
-      id: 'team-mci',
-      name: 'Manchester City',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
-    },
-    awayTeam: {
-      id: 'team-ars',
-      name: 'Arsenal',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
-    },
-    kickoffTime: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'upcoming' as const,
-    aiConfidence: 'High' as const,
-    predictionId: 'pred-2',
-  },
-  {
-    id: 'match-3',
-    homeTeam: {
-      id: 'team-new',
-      name: 'Newcastle',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/5/56/Newcastle_United_Logo.svg',
-    },
-    awayTeam: {
-      id: 'team-bri',
-      name: 'Brighton',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/f/fd/Brighton_%26_Hove_Albion_logo.svg',
-    },
-    kickoffTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'upcoming' as const,
-    aiConfidence: 'Medium' as const,
-    predictionId: 'pred-3',
-  },
-  {
-    id: 'match-4',
-    homeTeam: {
-      id: 'team-avl',
-      name: 'Aston Villa',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/f/f9/Aston_Villa_FC_crest_%282016%29.svg',
-    },
-    awayTeam: {
-      id: 'team-whu',
-      name: 'West Ham',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/c/c2/West_Ham_United_FC_logo.svg',
-    },
-    kickoffTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'upcoming' as const,
-    aiConfidence: 'Medium' as const,
-    predictionId: 'pred-4',
-  },
-  {
-    id: 'match-5',
-    homeTeam: {
-      id: 'team-che',
-      name: 'Chelsea',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg',
-    },
-    awayTeam: {
-      id: 'team-tot',
-      name: 'Tottenham',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg',
-    },
-    kickoffTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'upcoming' as const,
-    aiConfidence: 'Low' as const,
-    predictionId: 'pred-5',
-  },
-
-  // FINISHED MATCHES
-  {
-    id: 'match-finished-1',
-    homeTeam: {
-      id: 'team-ars',
-      name: 'Arsenal',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
-    },
-    awayTeam: {
-      id: 'team-sou',
-      name: 'Southampton',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/c/c9/FC_Southampton.svg',
-    },
-    kickoffTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    status: 'finished' as const,
-    homeScore: 3,
-    awayScore: 1,
-    aiConfidence: 'High' as const,
-    predictionId: 'pred-finished-1',
-  },
-  {
-    id: 'match-finished-2',
-    homeTeam: {
-      id: 'team-liv',
-      name: 'Liverpool',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
-    },
-    awayTeam: {
-      id: 'team-bou',
-      name: 'Bournemouth',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/e/e5/AFC_Bournemouth_%282013%29.svg',
-    },
-    kickoffTime: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-    status: 'finished' as const,
-    homeScore: 4,
+    kickoffTime: '2025-10-25T20:00:00Z',
+    status: 'upcoming',
+    homeScore: 0,
     awayScore: 0,
-    aiConfidence: 'High' as const,
-    predictionId: 'pred-finished-2',
+    venue: 'Old Trafford',
+    referee: 'Michael Oliver',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
   },
   {
-    id: 'match-finished-3',
+    id: '2',
+    apiId: 'api-2',
     homeTeam: {
-      id: 'team-mci',
+      id: 't43',
       name: 'Manchester City',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
+      apiId: 'api-t43',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t43.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
     awayTeam: {
-      id: 'team-not',
-      name: 'Nottingham Forest',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/e/e5/Nottingham_Forest_F.C._logo.svg',
+      id: 't3',
+      name: 'Arsenal',
+      apiId: 'api-t3',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t3.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
-    kickoffTime: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
-    status: 'finished' as const,
-    homeScore: 2,
-    awayScore: 2,
-    aiConfidence: 'Medium' as const,
-    predictionId: 'pred-finished-3',
+    kickoffTime: '2025-10-26T15:00:00Z',
+    status: 'upcoming',
+    homeScore: 0,
+    awayScore: 0,
+    venue: 'Etihad Stadium',
+    referee: 'Anthony Taylor',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
   },
   {
-    id: 'match-finished-4',
+    id: '3',
+    apiId: 'api-3',
     homeTeam: {
-      id: 'team-tot',
-      name: 'Tottenham',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg',
+      id: 't8',
+      name: 'Chelsea',
+      apiId: 'api-t8',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t8.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
     awayTeam: {
-      id: 'team-che',
-      name: 'Chelsea',
-      logoUrl: 'https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg',
+      id: 't6',
+      name: 'Tottenham',
+      apiId: 'api-t6',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t6.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
     },
-    kickoffTime: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    status: 'finished' as const,
-    homeScore: 1,
-    awayScore: 3,
-    aiConfidence: 'Low' as const,
-    predictionId: 'pred-finished-4',
+    kickoffTime: '2025-10-26T17:30:00Z',
+    status: 'upcoming',
+    homeScore: 0,
+    awayScore: 0,
+    venue: 'Stamford Bridge',
+    referee: 'Craig Pawson',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
+  },
+  {
+    id: '4',
+    apiId: 'api-4',
+    homeTeam: {
+      id: 't4',
+      name: 'Newcastle',
+      apiId: 'api-t4',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t4.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    awayTeam: {
+      id: 't36',
+      name: 'Brighton',
+      apiId: 'api-t36',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t36.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    kickoffTime: '2025-10-27T14:00:00Z',
+    status: 'upcoming',
+    homeScore: 0,
+    awayScore: 0,
+    venue: "St. James' Park",
+    referee: 'Simon Hooper',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
+  },
+  {
+    id: '5',
+    apiId: 'api-5',
+    homeTeam: {
+      id: 't7',
+      name: 'Aston Villa',
+      apiId: 'api-t7',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t7.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    awayTeam: {
+      id: 't21',
+      name: 'West Ham',
+      apiId: 'api-t21',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t21.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    kickoffTime: '2025-10-27T16:30:00Z',
+    status: 'upcoming',
+    homeScore: 0,
+    awayScore: 0,
+    venue: 'Villa Park',
+    referee: 'Robert Jones',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
   },
 ];
 
-export const dummyPredictions: Record<string, any> = {
-  'pred-live-1': {
-    id: 'pred-live-1',
-    homeWinProbability: 48,
-    drawProbability: 28,
-    awayWinProbability: 24,
-    aiConfidence: 'Medium' as const,
-    aiAnalysis:
-      "Leicester's home advantage is being neutralized by Everton's defensive organization. The match is currently balanced at 1-1, with both teams creating chances. The next goal will be crucial.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'L', 'D', 'W', 'L'],
-        away: ['D', 'L', 'W', 'D', 'D'],
+// Match details (for /matches/:id endpoint)
+export const dummyMatchDetails: Record<string, MatchDetail> = {
+  '1': {
+    id: '1',
+    apiId: 'api-1',
+    homeTeam: {
+      id: 't1',
+      name: 'FC Copenhagen',
+      apiId: 'api-t1',
+      logoUrl: 'https://media.api-sports.io/football/teams/400.png',
+      country: 'Denmark',
+      league: 'Superliga',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    awayTeam: {
+      id: 't2',
+      name: 'Kairat Almaty',
+      apiId: 'api-t2',
+      logoUrl: 'https://media.api-sports.io/football/teams/686.png',
+      country: 'Kazakhstan',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    homeTeamId: 't1',
+    awayTeamId: 't2',
+    kickoffTime: '2025-11-27T20:00:00Z',
+    status: 'finished',
+    homeScore: 3,
+    awayScore: 2,
+    venue: 'Parken Stadium',
+    referee: 'Michael Oliver',
+    league: 'Denmark',
+    season: '2025',
+    round: 'Round 15',
+    externalData: {
+      goals: { home: 3, away: 2 },
+      score: {
+        halftime: { home: 1, away: 1 },
+        fulltime: { home: 3, away: 2 },
+        extratime: { home: null, away: null },
+        penalty: { home: null, away: null },
       },
-      goalsLast10: {
-        home: 11,
-        away: 9,
+      teams: {
+        home: { id: 400, name: 'FC Copenhagen', logo: '', winner: true },
+        away: { id: 686, name: 'Kairat Almaty', logo: '', winner: false },
       },
-      expectedGoals: {
-        home: 1.5,
-        away: 1.3,
+      league: {
+        id: 119,
+        name: 'Superliga',
+        country: 'Denmark',
+        logo: '',
+        flag: '',
+        season: 2025,
+        round: 'Round 15',
+        standings: true,
       },
-      injuries: {
-        home: 2,
-        away: 3,
+      fixture: {
+        id: 12345,
+        date: '2025-11-27T20:00:00Z',
+        timestamp: 1732737600,
+        timezone: 'UTC',
+        status: { long: 'Match Finished', short: 'FT', elapsed: 90, extra: null },
+        venue: { id: 1, name: 'Parken Stadium', city: 'Copenhagen' },
+        referee: 'Michael Oliver',
+        periods: { first: 1732737600, second: 1732741200 },
       },
-      headToHead: {
-        homeWins: 6,
-        draws: 8,
-        awayWins: 5,
+    },
+    prediction: {
+      id: 'pred-1',
+      homeWinProbability: 55,
+      drawProbability: 25,
+      awayWinProbability: 20,
+      aiConfidence: 'High',
+      aiAnalysis: 'FC Copenhagen has strong home form and historical advantage. Expected to dominate possession.',
+      quickStats: {
+        recentForm: {
+          home: ['W', 'W', 'D', 'L', 'W'],
+          away: ['L', 'L', 'W', 'D', 'L'],
+        },
+        goalsLast10: { home: 18, away: 12 },
+        expectedGoals: { home: 1.8, away: 1.2 },
+        injuries: { home: 2, away: 3 },
+        headToHead: { homeWins: 5, draws: 2, awayWins: 1 },
       },
     },
   },
-  'pred-live-2': {
-    id: 'pred-live-2',
-    homeWinProbability: 25,
-    drawProbability: 20,
-    awayWinProbability: 55,
-    aiConfidence: 'Low' as const,
-    aiAnalysis:
-      "Crystal Palace has taken control with a 2-0 lead. Wolverhampton needs to push forward but risks conceding more. Palace's counter-attacking threat is significant.",
-    quickStats: {
-      recentForm: {
-        home: ['L', 'L', 'D', 'L', 'W'],
-        away: ['W', 'D', 'W', 'L', 'W'],
+  '2': {
+    id: '2',
+    apiId: 'api-2',
+    homeTeam: {
+      id: 't43',
+      name: 'Manchester City',
+      apiId: 'api-t43',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t43.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    awayTeam: {
+      id: 't3',
+      name: 'Arsenal',
+      apiId: 'api-t3',
+      logoUrl: 'https://resources.premierleague.com/premierleague/badges/50/t3.png',
+      country: 'England',
+      league: 'Premier League',
+      createdAt: '2025-01-01',
+      updatedAt: '2025-01-01',
+    },
+    homeTeamId: 't43',
+    awayTeamId: 't3',
+    kickoffTime: '2025-10-26T15:00:00Z',
+    status: 'upcoming',
+    homeScore: 0,
+    awayScore: 0,
+    venue: 'Etihad Stadium',
+    referee: 'Anthony Taylor',
+    league: 'England',
+    season: '2025',
+    round: 'Round 10',
+    externalData: {
+      goals: { home: 0, away: 0 },
+      score: {
+        halftime: { home: null, away: null },
+        fulltime: { home: null, away: null },
+        extratime: { home: null, away: null },
+        penalty: { home: null, away: null },
       },
-      goalsLast10: {
-        home: 8,
-        away: 14,
+      teams: {
+        home: { id: 43, name: 'Manchester City', logo: '', winner: null },
+        away: { id: 3, name: 'Arsenal', logo: '', winner: null },
       },
-      expectedGoals: {
-        home: 1.2,
-        away: 2.1,
+      league: {
+        id: 39,
+        name: 'Premier League',
+        country: 'England',
+        logo: '',
+        flag: '',
+        season: 2025,
+        round: 'Round 10',
+        standings: true,
       },
-      injuries: {
-        home: 4,
-        away: 1,
+      fixture: {
+        id: 12346,
+        date: '2025-10-26T15:00:00Z',
+        timestamp: 1729951200,
+        timezone: 'UTC',
+        status: { long: 'Not Started', short: 'NS', elapsed: null, extra: null },
+        venue: { id: 2, name: 'Etihad Stadium', city: 'Manchester' },
+        referee: 'Anthony Taylor',
+        periods: { first: null, second: null },
       },
-      headToHead: {
-        homeWins: 7,
-        draws: 6,
-        awayWins: 8,
+    },
+    prediction: {
+      id: 'pred-2',
+      homeWinProbability: 45,
+      drawProbability: 30,
+      awayWinProbability: 25,
+      aiConfidence: 'Medium',
+      aiAnalysis: "Tight match expected. City has home advantage but Arsenal in good form.",
+      quickStats: {
+        recentForm: {
+          home: ['W', 'W', 'W', 'D', 'W'],
+          away: ['W', 'D', 'W', 'W', 'L'],
+        },
+        goalsLast10: { home: 25, away: 22 },
+        expectedGoals: { home: 2.1, away: 1.9 },
+        injuries: { home: 1, away: 2 },
+        headToHead: { homeWins: 8, draws: 4, awayWins: 6 },
       },
     },
   },
-  'match-1': {
-    id: 'pred-1',
-    homeWinProbability: 45,
-    drawProbability: 30,
-    awayWinProbability: 25,
-    aiConfidence: 'Medium' as const,
-    aiAnalysis:
-      "Manchester United's home advantage and recent form give them a slight edge. Liverpool's attacking prowess could create problems, but United's defensive improvements should help them secure a result.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'D', 'W', 'L', 'W'],
-        away: ['W', 'W', 'D', 'L', 'W'],
-      },
-      goalsLast10: {
-        home: 14,
-        away: 18,
-      },
-      expectedGoals: {
-        home: 1.8,
-        away: 1.6,
-      },
-      injuries: {
-        home: 2,
-        away: 1,
-      },
-      headToHead: {
-        homeWins: 7,
-        draws: 5,
-        awayWins: 8,
-      },
-    },
-  },
-  'match-2': {
-    id: 'pred-2',
-    homeWinProbability: 60,
-    drawProbability: 25,
-    awayWinProbability: 15,
-    aiConfidence: 'High' as const,
-    aiAnalysis:
-      "Manchester City's dominant home record and tactical superiority give them a strong advantage. Arsenal's defensive organization will be tested, but City's attacking depth should prove decisive.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'W', 'D', 'W'],
-        away: ['W', 'D', 'D', 'W', 'L'],
-      },
-      goalsLast10: {
-        home: 22,
-        away: 15,
-      },
-      expectedGoals: {
-        home: 2.5,
-        away: 1.4,
-      },
-      injuries: {
-        home: 1,
-        away: 3,
-      },
-      headToHead: {
-        homeWins: 10,
-        draws: 3,
-        awayWins: 5,
-      },
-    },
-  },
-  'match-3': {
-    id: 'pred-3',
-    homeWinProbability: 55,
-    drawProbability: 25,
-    awayWinProbability: 20,
-    aiConfidence: 'Medium' as const,
-    aiAnalysis:
-      "Newcastle's home advantage and recent winning streak give them the edge. Brighton's tactical flexibility could cause problems, but Newcastle's momentum should prevail.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'D', 'W', 'L'],
-        away: ['D', 'L', 'W', 'D', 'W'],
-      },
-      goalsLast10: {
-        home: 16,
-        away: 10,
-      },
-      expectedGoals: {
-        home: 2.2,
-        away: 1.7,
-      },
-      injuries: {
-        home: 1,
-        away: 2,
-      },
-      headToHead: {
-        homeWins: 8,
-        draws: 4,
-        awayWins: 6,
-      },
-    },
-  },
-  'match-4': {
-    id: 'pred-4',
-    homeWinProbability: 50,
-    drawProbability: 30,
-    awayWinProbability: 20,
-    aiConfidence: 'Medium' as const,
-    aiAnalysis:
-      "Aston Villa's strong home form meets West Ham's inconsistent away record. Villa's attacking players are in good form, which should give them a narrow advantage.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'L', 'D', 'W'],
-        away: ['L', 'D', 'W', 'L', 'D'],
-      },
-      goalsLast10: {
-        home: 13,
-        away: 11,
-      },
-      expectedGoals: {
-        home: 1.9,
-        away: 1.5,
-      },
-      injuries: {
-        home: 2,
-        away: 2,
-      },
-      headToHead: {
-        homeWins: 6,
-        draws: 7,
-        awayWins: 7,
-      },
-    },
-  },
-  'match-5': {
-    id: 'pred-5',
-    homeWinProbability: 40,
-    drawProbability: 30,
-    awayWinProbability: 30,
-    aiConfidence: 'Low' as const,
-    aiAnalysis:
-      "This London derby is highly unpredictable. Both teams have shown inconsistency recently, and form goes out the window in local rivalries. Expect a tight, competitive match.",
-    quickStats: {
-      recentForm: {
-        home: ['D', 'L', 'W', 'D', 'L'],
-        away: ['L', 'W', 'D', 'L', 'W'],
-      },
-      goalsLast10: {
-        home: 12,
-        away: 13,
-      },
-      expectedGoals: {
-        home: 1.6,
-        away: 1.7,
-      },
-      injuries: {
-        home: 3,
-        away: 2,
-      },
-      headToHead: {
-        homeWins: 9,
-        draws: 8,
-        awayWins: 10,
-      },
-    },
-  },
-  'pred-finished-1': {
-    id: 'pred-finished-1',
-    homeWinProbability: 75,
-    drawProbability: 15,
-    awayWinProbability: 10,
-    aiConfidence: 'High' as const,
-    aiAnalysis:
-      "Arsenal dominated as expected with a convincing 3-1 victory. Their attacking prowess was on full display, and Southampton struggled to contain them throughout the match.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'W', 'D', 'W'],
-        away: ['L', 'L', 'L', 'D', 'L'],
-      },
-      goalsLast10: {
-        home: 24,
-        away: 6,
-      },
-      expectedGoals: {
-        home: 3.2,
-        away: 0.8,
-      },
-      injuries: {
-        home: 1,
-        away: 5,
-      },
-      headToHead: {
-        homeWins: 12,
-        draws: 3,
-        awayWins: 2,
-      },
-    },
-  },
-  'pred-finished-2': {
-    id: 'pred-finished-2',
-    homeWinProbability: 80,
-    drawProbability: 12,
-    awayWinProbability: 8,
-    aiConfidence: 'High' as const,
-    aiAnalysis:
-      "Liverpool's 4-0 thrashing of Bournemouth was a dominant display. Their attacking trio was unstoppable, and Bournemouth had no answer to Liverpool's high press and quick transitions.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'W', 'W', 'D'],
-        away: ['L', 'L', 'D', 'L', 'L'],
-      },
-      goalsLast10: {
-        home: 28,
-        away: 7,
-      },
-      expectedGoals: {
-        home: 3.8,
-        away: 0.6,
-      },
-      injuries: {
-        home: 0,
-        away: 4,
-      },
-      headToHead: {
-        homeWins: 15,
-        draws: 2,
-        awayWins: 1,
-      },
-    },
-  },
-  'pred-finished-3': {
-    id: 'pred-finished-3',
-    homeWinProbability: 65,
-    drawProbability: 22,
-    awayWinProbability: 13,
-    aiConfidence: 'Medium' as const,
-    aiAnalysis:
-      "Surprising 2-2 draw as Nottingham Forest held Manchester City. City dominated possession but couldn't convert their chances, while Forest defended resiliently and capitalized on set pieces.",
-    quickStats: {
-      recentForm: {
-        home: ['W', 'W', 'D', 'W', 'W'],
-        away: ['D', 'L', 'W', 'D', 'L'],
-      },
-      goalsLast10: {
-        home: 26,
-        away: 12,
-      },
-      expectedGoals: {
-        home: 2.9,
-        away: 1.1,
-      },
-      injuries: {
-        home: 2,
-        away: 2,
-      },
-      headToHead: {
-        homeWins: 8,
-        draws: 3,
-        awayWins: 2,
-      },
-    },
-  },
-  'pred-finished-4': {
-    id: 'pred-finished-4',
-    homeWinProbability: 42,
-    drawProbability: 28,
-    awayWinProbability: 30,
-    aiConfidence: 'Low' as const,
-    aiAnalysis:
-      "Chelsea won 3-1 in a London derby thriller. Tottenham started well but Chelsea's second-half surge proved decisive. A tactical masterclass from Chelsea's manager changed the game.",
-    quickStats: {
-      recentForm: {
-        home: ['L', 'W', 'D', 'L', 'W'],
-        away: ['W', 'D', 'W', 'L', 'D'],
-      },
-      goalsLast10: {
-        home: 14,
-        away: 15,
-      },
-      expectedGoals: {
-        home: 1.6,
-        away: 1.8,
-      },
-      injuries: {
-        home: 3,
-        away: 2,
-      },
-      headToHead: {
-        homeWins: 10,
-        draws: 9,
-        awayWins: 11,
-      },
-    },
-  },
+};
+
+// Predictions map (for backwards compatibility)
+export const dummyPredictions: Record<string, Prediction> = {
+  '1': dummyMatchDetails['1'].prediction,
+  '2': dummyMatchDetails['2'].prediction,
 };

@@ -57,7 +57,7 @@ export class SavedMatchService {
     // Return with match data if using database, simple response for dummy
     if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
       const match = dummyMatches.find(m => m.id === matchId);
-      const prediction = match ? (dummyPredictions[matchId] || dummyPredictions[match.predictionId]) : null;
+      const prediction = match ? dummyPredictions[matchId] : null;
 
       return {
         ...savedMatch,
@@ -134,7 +134,7 @@ export class SavedMatchService {
           if (status && match.status !== status) return null;
 
           // Get prediction for this match
-          const prediction = dummyPredictions[saved.matchId] || dummyPredictions[match.predictionId];
+          const prediction = dummyPredictions[saved.matchId];
 
           return {
             ...saved,

@@ -1,5 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { dummyMatches, dummyPredictions } from '../data/matches.dummy';
+import { dummyMatches, dummyMatchDetails, homeStats } from '../data/matches.dummy';
+import {
+  matchStatistics,
+  formStatistics,
+  homeTeamRecentMatches,
+  awayTeamRecentMatches,
+  standings,
+  aiPredictions,
+  matchHeaderOdds,
+  marketValues,
+  scorePredictions,
+  statsPredictions,
+  getMatchDetailData,
+} from '../data/match-detail.dummy';
 import { AppError } from '../types/common.types';
 import { prisma } from '../lib/prisma';
 import { env } from '../config/env';
@@ -11,12 +24,14 @@ import {
 import { generatePrediction } from '../utils/generate-prediction';
 
 export class MatchesController {
+  // GET /matches - Get all matches (paginated)
   async getMatches(req: Request, res: Response, next: NextFunction) {
     try {
-      // If using dummy data, return simple response
+      // If using dummy data, return mock response
       if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
         const limit = parseInt(req.query.limit as string) || 20;
         const status = req.query.status as string;
+        const date = req.query.date as string; // yesterday, today, tomorrow
 
         let matches = [...dummyMatches];
 
@@ -33,8 +48,8 @@ export class MatchesController {
             totalItems: matches.length,
             totalPages: 1,
             hasNextPage: false,
-            hasPreviousPage: false
-          }
+            hasPreviousPage: false,
+          },
         });
       }
 
@@ -73,26 +88,57 @@ export class MatchesController {
     }
   }
 
+  // GET /matches/upcoming - Get upcoming matches
+  async getUpcomingMatches(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        const matches = dummyMatches.filter((m) => m.status === 'upcoming');
+        return res.status(200).json({
+          data: matches,
+          count: matches.length,
+        });
+      }
+
+      const matches = await prisma.match.findMany({
+        where: { status: 'upcoming' },
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+        orderBy: {
+          kickoffTime: 'asc',
+        },
+        take: 20,
+      });
+
+      return res.status(200).json({
+        data: matches,
+        count: matches.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/:id - Get match details with prediction
   async getMatchById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
 
       // If using dummy data
       if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        const matchDetail = dummyMatchDetails[id];
+        if (matchDetail) {
+          return res.status(200).json(matchDetail);
+        }
+
+        // Fallback to basic match
         const match = dummyMatches.find((m) => m.id === id);
         if (!match) {
           throw new AppError(404, 'Match not found');
         }
 
-        const prediction = dummyPredictions[id];
-        if (!prediction) {
-          throw new AppError(404, 'Prediction not found for this match');
-        }
-
-        return res.status(200).json({
-          ...match,
-          prediction,
-        });
+        return res.status(200).json(match);
       }
 
       // Using real database - fetch match with teams and predictions
@@ -139,6 +185,142 @@ export class MatchesController {
         ...match,
         prediction,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/:id/predictions - Get AI predictions for match
+  async getMatchPredictions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+
+      if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        const matchDetail = dummyMatchDetails[id];
+        if (matchDetail) {
+          return res.status(200).json({
+            prediction: matchDetail.prediction,
+            aiPredictions,
+            matchHeaderOdds,
+            scorePredictions,
+            statsPredictions,
+          });
+        }
+        throw new AppError(404, 'Match not found');
+      }
+
+      const match = await prisma.match.findUnique({
+        where: { id },
+        include: {
+          predictions: {
+            where: { userId: null },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      });
+
+      if (!match) {
+        throw new AppError(404, 'Match not found');
+      }
+
+      return res.status(200).json({
+        predictions: match.predictions,
+        aiPredictions,
+        matchHeaderOdds,
+        scorePredictions,
+        statsPredictions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/:id/statistics - Get match statistics
+  async getMatchStatistics(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+
+      if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        return res.status(200).json({
+          matchId: id,
+          statistics: matchStatistics,
+        });
+      }
+
+      const stats = await prisma.matchStatistics.findUnique({
+        where: { matchId: id },
+      });
+
+      if (!stats) {
+        // Return default statistics if none found
+        return res.status(200).json({
+          matchId: id,
+          statistics: matchStatistics,
+        });
+      }
+
+      return res.status(200).json({
+        matchId: id,
+        statistics: stats,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/:id/form - Get team form data
+  async getMatchForm(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+
+      if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        return res.status(200).json({
+          matchId: id,
+          formStatistics,
+          marketValues,
+        });
+      }
+
+      // In production, fetch from database
+      return res.status(200).json({
+        matchId: id,
+        formStatistics,
+        marketValues,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/:id/recent - Get recent matches for teams
+  async getRecentMatches(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+
+      if (env.FOOTBALL_DATA_SOURCE === 'dummy') {
+        return res.status(200).json({
+          matchId: id,
+          homeTeamRecentMatches,
+          awayTeamRecentMatches,
+        });
+      }
+
+      // In production, fetch from database
+      return res.status(200).json({
+        matchId: id,
+        homeTeamRecentMatches,
+        awayTeamRecentMatches,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // GET /matches/home-stats - Get home stats
+  async getHomeStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      return res.status(200).json(homeStats);
     } catch (error) {
       next(error);
     }

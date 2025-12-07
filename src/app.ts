@@ -12,6 +12,8 @@ import insightsRoutes from './routes/insights.routes';
 import healthRoutes from './routes/health.routes';
 import savedMatchRoutes from './routes/saved-match.routes';
 import userStatsRoutes from './routes/user-stats.routes';
+import staticRoutes from './routes/static.routes';
+import leaguesRoutes from './routes/leagues.routes';
 
 const app = express();
 
@@ -40,6 +42,13 @@ app.use('/matches', matchesRoutes);
 app.use('/insights', insightsRoutes);
 app.use('/saved-matches', savedMatchRoutes);
 app.use('/stats', userStatsRoutes);
+app.use('/static', staticRoutes);
+app.use('/leagues', leaguesRoutes);
+
+// Alias routes for API compatibility with mockData.json expected endpoints
+// /user/* routes can also be accessed via /me/*
+app.use('/user/profile', userRoutes);
+app.use('/user/saved-matches', savedMatchRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

@@ -1,0 +1,736 @@
+{
+  "_metadata": {
+    "description": "Mock data for AI Football Prediction App - Phase 1 UI/UX",
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-01",
+    "note": "This file contains all mock/static data that should be replaced with backend API responses in Phase 2"
+  },
+
+  "api_endpoints": {
+    "description": "Expected backend API endpoints for Phase 2 integration",
+    "endpoints": [
+      { "method": "POST", "path": "/auth/register", "description": "User registration" },
+      { "method": "POST", "path": "/auth/login", "description": "User login" },
+      { "method": "GET", "path": "/matches/upcoming", "description": "Get upcoming matches" },
+      { "method": "GET", "path": "/matches/:id", "description": "Get match details" },
+      { "method": "GET", "path": "/matches/:id/predictions", "description": "Get AI predictions for match" },
+      { "method": "GET", "path": "/matches/:id/statistics", "description": "Get match statistics" },
+      { "method": "GET", "path": "/matches/:id/form", "description": "Get team form data" },
+      { "method": "GET", "path": "/matches/:id/recent", "description": "Get recent matches for teams" },
+      { "method": "GET", "path": "/leagues/:id/standings", "description": "Get league standings" },
+      { "method": "GET", "path": "/insights/accuracy", "description": "Get prediction accuracy data" },
+      { "method": "GET", "path": "/insights/top-teams", "description": "Get top performing teams" },
+      { "method": "GET", "path": "/insights/confidence-distribution", "description": "Get confidence distribution" },
+      { "method": "GET", "path": "/user/profile", "description": "Get user profile" },
+      { "method": "PUT", "path": "/user/profile", "description": "Update user profile" },
+      { "method": "GET", "path": "/user/saved-matches", "description": "Get saved matches" },
+      { "method": "POST", "path": "/user/saved-matches", "description": "Save a match" },
+      { "method": "DELETE", "path": "/user/saved-matches/:id", "description": "Unsave a match" }
+    ]
+  },
+
+  "user": {
+    "id": "1",
+    "name": "Alex Johnson",
+    "email": "alex@example.com",
+    "avatar": "https://ui-avatars.com/api/?name=Alex+Johnson&background=4A9FE8&color=fff",
+    "preferences": {
+      "notifications": true,
+      "darkMode": true,
+      "language": "en"
+    }
+  },
+
+  "homeStats": {
+    "predicted": 571,
+    "upcoming": 536,
+    "won": 23
+  },
+
+  "matches": [
+    {
+      "id": "1",
+      "apiId": "api-1",
+      "homeTeam": {
+        "id": "t1",
+        "name": "Manchester United",
+        "apiId": "api-t1",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t1.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t14",
+        "name": "Liverpool",
+        "apiId": "api-t14",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t14.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "kickoffTime": "2025-10-25T20:00:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "Old Trafford",
+      "referee": "Michael Oliver",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10"
+    },
+    {
+      "id": "2",
+      "apiId": "api-2",
+      "homeTeam": {
+        "id": "t43",
+        "name": "Manchester City",
+        "apiId": "api-t43",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t43.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t3",
+        "name": "Arsenal",
+        "apiId": "api-t3",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t3.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "kickoffTime": "2025-10-26T15:00:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "Etihad Stadium",
+      "referee": "Anthony Taylor",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10"
+    },
+    {
+      "id": "3",
+      "apiId": "api-3",
+      "homeTeam": {
+        "id": "t8",
+        "name": "Chelsea",
+        "apiId": "api-t8",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t8.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t6",
+        "name": "Tottenham",
+        "apiId": "api-t6",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t6.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "kickoffTime": "2025-10-26T17:30:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "Stamford Bridge",
+      "referee": "Craig Pawson",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10"
+    },
+    {
+      "id": "4",
+      "apiId": "api-4",
+      "homeTeam": {
+        "id": "t4",
+        "name": "Newcastle",
+        "apiId": "api-t4",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t4.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t36",
+        "name": "Brighton",
+        "apiId": "api-t36",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t36.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "kickoffTime": "2025-10-27T14:00:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "St. James' Park",
+      "referee": "Simon Hooper",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10"
+    },
+    {
+      "id": "5",
+      "apiId": "api-5",
+      "homeTeam": {
+        "id": "t7",
+        "name": "Aston Villa",
+        "apiId": "api-t7",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t7.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t21",
+        "name": "West Ham",
+        "apiId": "api-t21",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t21.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "kickoffTime": "2025-10-27T16:30:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "Villa Park",
+      "referee": "Robert Jones",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10"
+    }
+  ],
+
+  "matchDetails": {
+    "1": {
+      "id": "1",
+      "apiId": "api-1",
+      "homeTeam": {
+        "id": "t1",
+        "name": "FC Copenhagen",
+        "apiId": "api-t1",
+        "logoUrl": "https://media.api-sports.io/football/teams/400.png",
+        "country": "Denmark",
+        "league": "Superliga",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t2",
+        "name": "Kairat Almaty",
+        "apiId": "api-t2",
+        "logoUrl": "https://media.api-sports.io/football/teams/686.png",
+        "country": "Kazakhstan",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "homeTeamId": "t1",
+      "awayTeamId": "t2",
+      "kickoffTime": "2025-11-27T20:00:00Z",
+      "status": "finished",
+      "homeScore": 3,
+      "awayScore": 2,
+      "venue": "Parken Stadium",
+      "referee": "Michael Oliver",
+      "league": "Denmark",
+      "season": "2025",
+      "round": "Round 15",
+      "externalData": {
+        "goals": { "home": 3, "away": 2 },
+        "score": {
+          "halftime": { "home": 1, "away": 1 },
+          "fulltime": { "home": 3, "away": 2 },
+          "extratime": { "home": null, "away": null },
+          "penalty": { "home": null, "away": null }
+        },
+        "teams": {
+          "home": { "id": 400, "name": "FC Copenhagen", "logo": "", "winner": true },
+          "away": { "id": 686, "name": "Kairat Almaty", "logo": "", "winner": false }
+        },
+        "league": {
+          "id": 119,
+          "name": "Superliga",
+          "country": "Denmark",
+          "logo": "",
+          "flag": "",
+          "season": 2025,
+          "round": "Round 15",
+          "standings": true
+        },
+        "fixture": {
+          "id": 12345,
+          "date": "2025-11-27T20:00:00Z",
+          "timestamp": 1732737600,
+          "timezone": "UTC",
+          "status": { "long": "Match Finished", "short": "FT", "elapsed": 90, "extra": null },
+          "venue": { "id": 1, "name": "Parken Stadium", "city": "Copenhagen" },
+          "referee": "Michael Oliver",
+          "periods": { "first": 1732737600, "second": 1732741200 }
+        }
+      },
+      "prediction": {
+        "id": "pred-1",
+        "homeWinProbability": 55,
+        "drawProbability": 25,
+        "awayWinProbability": 20,
+        "aiConfidence": "High",
+        "aiAnalysis": "FC Copenhagen has strong home form and historical advantage. Expected to dominate possession.",
+        "quickStats": {
+          "recentForm": {
+            "home": ["W", "W", "D", "L", "W"],
+            "away": ["L", "L", "W", "D", "L"]
+          },
+          "goalsLast10": { "home": 18, "away": 12 },
+          "expectedGoals": { "home": 1.8, "away": 1.2 },
+          "injuries": { "home": 2, "away": 3 },
+          "headToHead": { "homeWins": 5, "draws": 2, "awayWins": 1 }
+        }
+      }
+    },
+    "2": {
+      "id": "2",
+      "apiId": "api-2",
+      "homeTeam": {
+        "id": "t43",
+        "name": "Manchester City",
+        "apiId": "api-t43",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t43.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "awayTeam": {
+        "id": "t3",
+        "name": "Arsenal",
+        "apiId": "api-t3",
+        "logoUrl": "https://resources.premierleague.com/premierleague/badges/50/t3.png",
+        "country": "England",
+        "league": "Premier League",
+        "createdAt": "2025-01-01",
+        "updatedAt": "2025-01-01"
+      },
+      "homeTeamId": "t43",
+      "awayTeamId": "t3",
+      "kickoffTime": "2025-10-26T15:00:00Z",
+      "status": "upcoming",
+      "homeScore": 0,
+      "awayScore": 0,
+      "venue": "Etihad Stadium",
+      "referee": "Anthony Taylor",
+      "league": "England",
+      "season": "2025",
+      "round": "Round 10",
+      "externalData": {
+        "goals": { "home": 0, "away": 0 },
+        "score": {
+          "halftime": { "home": null, "away": null },
+          "fulltime": { "home": null, "away": null },
+          "extratime": { "home": null, "away": null },
+          "penalty": { "home": null, "away": null }
+        },
+        "teams": {
+          "home": { "id": 43, "name": "Manchester City", "logo": "", "winner": null },
+          "away": { "id": 3, "name": "Arsenal", "logo": "", "winner": null }
+        },
+        "league": {
+          "id": 39,
+          "name": "Premier League",
+          "country": "England",
+          "logo": "",
+          "flag": "",
+          "season": 2025,
+          "round": "Round 10",
+          "standings": true
+        },
+        "fixture": {
+          "id": 12346,
+          "date": "2025-10-26T15:00:00Z",
+          "timestamp": 1729951200,
+          "timezone": "UTC",
+          "status": { "long": "Not Started", "short": "NS", "elapsed": null, "extra": null },
+          "venue": { "id": 2, "name": "Etihad Stadium", "city": "Manchester" },
+          "referee": "Anthony Taylor",
+          "periods": { "first": null, "second": null }
+        }
+      },
+      "prediction": {
+        "id": "pred-2",
+        "homeWinProbability": 45,
+        "drawProbability": 30,
+        "awayWinProbability": 25,
+        "aiConfidence": "Medium",
+        "aiAnalysis": "Tight match expected. City has home advantage but Arsenal in good form.",
+        "quickStats": {
+          "recentForm": {
+            "home": ["W", "W", "W", "D", "W"],
+            "away": ["W", "D", "W", "W", "L"]
+          },
+          "goalsLast10": { "home": 25, "away": 22 },
+          "expectedGoals": { "home": 2.1, "away": 1.9 },
+          "injuries": { "home": 1, "away": 2 },
+          "headToHead": { "homeWins": 8, "draws": 4, "awayWins": 6 }
+        }
+      }
+    }
+  },
+
+  "matchDetailScreen": {
+    "matchStatistics": {
+      "description": "Average per match statistics for Statistics tab",
+      "totalGoals": { "home": 3.1, "away": 2.7 },
+      "goalsScored": { "home": 1.2, "away": 1.4 },
+      "goalsAgainst": { "home": 1.9, "away": 1.3 },
+      "possession": { "home": 53, "away": 46 },
+      "totalShots": { "home": 16.2, "away": 14 },
+      "shotsOnGoal": { "home": 4.5, "away": 4.2 },
+      "shotsOffGoal": { "home": 6.8, "away": 6.5 },
+      "fouls": { "home": 11.4, "away": 11.8 },
+      "corners": { "home": 5.4, "away": 3.8 },
+      "offsides": { "home": 1.6, "away": 0.8 },
+      "yellowCards": { "home": 1.22, "away": 1.33 }
+    },
+    "formStatistics": {
+      "description": "Overview Last 10 Matches statistics for Form tab",
+      "wins": { "home": 3, "away": 5 },
+      "over15Goals": { "home": 8, "away": 6 },
+      "over25Goals": { "home": 5, "away": 5 },
+      "over35Goals": { "home": 5, "away": 4 },
+      "bothTeamsScored": { "home": 5, "away": 4 },
+      "unexpectedWins": { "home": 0, "away": 0 },
+      "unexpectedLoses": { "home": 1, "away": 0 }
+    },
+    "homeTeamRecentMatches": [
+      { "date": "23 Nov", "result": "W", "homeTeam": { "name": "FC Copenhage." }, "awayTeam": { "name": "Brondby." }, "homeScore": 1, "awayScore": 0 },
+      { "date": "09 Nov", "result": "L", "homeTeam": { "name": "Vejle." }, "awayTeam": { "name": "FC Copenhage." }, "homeScore": 2, "awayScore": 0 },
+      { "date": "04 Nov", "result": "L", "homeTeam": { "name": "Tottenham." }, "awayTeam": { "name": "FC Copenhage." }, "homeScore": 4, "awayScore": 0 },
+      { "date": "01 Nov", "result": "W", "homeTeam": { "name": "FC Copenhage." }, "awayTeam": { "name": "Fredericia." }, "homeScore": 3, "awayScore": 2 },
+      { "date": "29 Oct", "result": "W", "homeTeam": { "name": "Hobro." }, "awayTeam": { "name": "FC Copenhage." }, "homeScore": 1, "awayScore": 4 },
+      { "date": "26 Oct", "result": "D", "homeTeam": { "name": "FC Copenhage." }, "awayTeam": { "name": "Viborg." }, "homeScore": 0, "awayScore": 0 },
+      { "date": "21 Oct", "result": "L", "homeTeam": { "name": "FC Copenhage." }, "awayTeam": { "name": "Dortmund." }, "homeScore": 2, "awayScore": 4 },
+      { "date": "17 Oct", "result": "L", "homeTeam": { "name": "Silkeborg." }, "awayTeam": { "name": "Copenhagen." }, "homeScore": 3, "awayScore": 1 },
+      { "date": "05 Oct", "result": "D", "homeTeam": { "name": "Copenhagen." }, "awayTeam": { "name": "Midtjylland." }, "homeScore": 1, "awayScore": 1 },
+      { "date": "01 Oct", "result": "L", "homeTeam": { "name": "Qarabag." }, "awayTeam": { "name": "Copenhagen." }, "homeScore": 2, "awayScore": 0 }
+    ],
+    "awayTeamRecentMatches": [
+      { "date": "05 Nov", "result": "L", "homeTeam": { "name": "Inter." }, "awayTeam": { "name": "Kairat Almat." }, "homeScore": 2, "awayScore": 1 },
+      { "date": "26 Oct", "result": "D", "homeTeam": { "name": "Kairat Almat." }, "awayTeam": { "name": "FC Astana." }, "homeScore": 1, "awayScore": 1 },
+      { "date": "21 Oct", "result": "D", "homeTeam": { "name": "Kairat Almat." }, "awayTeam": { "name": "Pafos." }, "homeScore": 0, "awayScore": 0 },
+      { "date": "17 Oct", "result": "W", "homeTeam": { "name": "Kyzyl-Zhar." }, "awayTeam": { "name": "Kairat." }, "homeScore": 0, "awayScore": 1 },
+      { "date": "05 Oct", "result": "W", "homeTeam": { "name": "Kairat." }, "awayTeam": { "name": "Zhetysu." }, "homeScore": 5, "awayScore": 0 },
+      { "date": "30 Sep", "result": "L", "homeTeam": { "name": "Kairat." }, "awayTeam": { "name": "Real Madrid." }, "homeScore": 0, "awayScore": 5 },
+      { "date": "22 Sep", "result": "W", "homeTeam": { "name": "Kairat." }, "awayTeam": { "name": "Zhenys." }, "homeScore": 3, "awayScore": 1 },
+      { "date": "18 Sep", "result": "L", "homeTeam": { "name": "Sporting CP." }, "awayTeam": { "name": "Kairat." }, "homeScore": 4, "awayScore": 1 },
+      { "date": "14 Sep", "result": "W", "homeTeam": { "name": "Kairat." }, "awayTeam": { "name": "Aktobe." }, "homeScore": 1, "awayScore": 0 },
+      { "date": "31 Aug", "result": "W", "homeTeam": { "name": "Okzhetpes." }, "awayTeam": { "name": "Kairat." }, "homeScore": 0, "awayScore": 1 }
+    ],
+    "standings": [
+      { "position": 1, "team": { "name": "Bayern Münche" }, "matches": 4, "goals": "14-3", "points": 12 },
+      { "position": 2, "team": { "name": "Arsenal" }, "matches": 4, "goals": "11-0", "points": 12 },
+      { "position": 3, "team": { "name": "Inter" }, "matches": 4, "goals": "11-1", "points": 12 },
+      { "position": 4, "team": { "name": "Manchester Cit" }, "matches": 4, "goals": "10-3", "points": 10 },
+      { "position": 5, "team": { "name": "Paris Saint Ge" }, "matches": 4, "goals": "14-5", "points": 9 },
+      { "position": 6, "team": { "name": "Leverkusen" }, "matches": 4, "goals": "9-2", "points": 9 },
+      { "position": 7, "team": { "name": "Real Madrid" }, "matches": 4, "goals": "8-2", "points": 9 },
+      { "position": 8, "team": { "name": "Liverpool" }, "matches": 4, "goals": "9-4", "points": 9 },
+      { "position": 9, "team": { "name": "Galatasaray" }, "matches": 4, "goals": "8-6", "points": 9 },
+      { "position": 10, "team": { "name": "Tottenham" }, "matches": 4, "goals": "7-2", "points": 8 },
+      { "position": 11, "team": { "name": "Barcelona" }, "matches": 4, "goals": "12-7", "points": 7 },
+      { "position": 12, "team": { "name": "Chelsea" }, "matches": 4, "goals": "9-6", "points": 7 },
+      { "position": 13, "team": { "name": "Sporting CP" }, "matches": 4, "goals": "8-5", "points": 7 },
+      { "position": 14, "team": { "name": "Borussia Dortm" }, "matches": 4, "goals": "13-11", "points": 7 },
+      { "position": 15, "team": { "name": "Qarabag" }, "matches": 4, "goals": "8-7", "points": 7 },
+      { "position": 16, "team": { "name": "Atalanta" }, "matches": 4, "goals": "3-5", "points": 7 },
+      { "position": 17, "team": { "name": "Atletico Madri" }, "matches": 4, "goals": "10-9", "points": 6 },
+      { "position": 18, "team": { "name": "PSV Eindhoven" }, "matches": 4, "goals": "9-7", "points": 5 },
+      { "position": 19, "team": { "name": "Monaco" }, "matches": 4, "goals": "4-6", "points": 5 },
+      { "position": 20, "team": { "name": "Pafos" }, "matches": 4, "goals": "2-5", "points": 5 },
+      { "position": 21, "team": { "name": "Bayer Leverkus" }, "matches": 4, "goals": "6-10", "points": 5 },
+      { "position": 22, "team": { "name": "Club Brugge KV" }, "matches": 4, "goals": "8-10", "points": 4 },
+      { "position": 23, "team": { "name": "Eintracht Fran" }, "matches": 4, "goals": "7-11", "points": 4 },
+      { "position": 24, "team": { "name": "Napoli" }, "matches": 4, "goals": "4-9", "points": 4 },
+      { "position": 25, "team": { "name": "Marseille" }, "matches": 4, "goals": "6-5", "points": 3 },
+      { "position": 26, "team": { "name": "Juventus" }, "matches": 4, "goals": "7-8", "points": 3 },
+      { "position": 27, "team": { "name": "Athletic Club" }, "matches": 4, "goals": "4-9", "points": 3 },
+      { "position": 28, "team": { "name": "Union St. Gill" }, "matches": 4, "goals": "4-12", "points": 3 },
+      { "position": 29, "team": { "name": "Bodo/Glimt" }, "matches": 4, "goals": "5-8", "points": 2 },
+      { "position": 30, "team": { "name": "Slavia Praha" }, "matches": 4, "goals": "2-8", "points": 2 },
+      { "position": 31, "team": { "name": "Olympiakos Pir" }, "matches": 4, "goals": "2-9", "points": 2 },
+      { "position": 32, "team": { "name": "Villarreal" }, "matches": 4, "goals": "2-6", "points": 1 },
+      { "position": 33, "team": { "name": "FC Copenhagen" }, "matches": 4, "goals": "4-12", "points": 1, "isHighlighted": true },
+      { "position": 34, "team": { "name": "Kairat Almaty" }, "matches": 4, "goals": "2-11", "points": 1, "isHighlighted": true },
+      { "position": 35, "team": { "name": "Benfica" }, "matches": 4, "goals": "2-8", "points": 0 },
+      { "position": 36, "team": { "name": "Ajax" }, "matches": 4, "goals": "1-14", "points": 0 }
+    ],
+    "aiPredictions": [
+      { "label": "Best Tip", "prediction": "U3.5", "odds": 1.63, "confidence": 3, "oddsDirection": "none" },
+      { "label": "1x2 Tip", "prediction": "2", "odds": 9.5, "confidence": 1, "oddsDirection": "down" },
+      { "label": "Total Goals", "prediction": "Under 3.5", "odds": 1.63, "confidence": 3, "oddsDirection": "none" },
+      { "label": "Both Teams To Score", "prediction": "Yes", "odds": 1.86, "confidence": 1, "oddsDirection": "up" },
+      { "label": "Bet Builder Tip", "prediction": "X2&U5.5", "odds": 3.70, "confidence": 1, "oddsDirection": "none" }
+    ],
+    "matchHeaderOdds": {
+      "homeWin": { "value": 1.40, "direction": "up" },
+      "draw": { "value": 5.40, "direction": "down" },
+      "awayWin": { "value": 9.50, "direction": "down" }
+    },
+    "marketValues": {
+      "home": "€75.35m",
+      "away": "€16.05m"
+    },
+    "scorePredictions": {
+      "halfTime": { "home": 0, "away": 1 },
+      "correctScore": { "home": 1, "away": 2 }
+    },
+    "statsPredictions": {
+      "xG": { "home": 1.35, "away": 0.54 },
+      "possession": { "home": 63, "away": 37 },
+      "totalShots": { "home": 19, "away": 10 },
+      "shotsOnGoal": { "home": 4, "away": 3 },
+      "shotsOffGoal": { "home": 7, "away": 4 },
+      "corners": { "home": 5, "away": 3 }
+    }
+  },
+
+  "insights": {
+    "accuracy": {
+      "period": "week",
+      "accuracy": 68.5,
+      "totalPredictions": 127,
+      "correctPredictions": 87,
+      "accuracyByDay": [
+        { "day": "Mon", "accuracy": 65 },
+        { "day": "Tue", "accuracy": 70 },
+        { "day": "Wed", "accuracy": 68 },
+        { "day": "Thu", "accuracy": 72 },
+        { "day": "Fri", "accuracy": 75 },
+        { "day": "Sat", "accuracy": 71 },
+        { "day": "Sun", "accuracy": 69 }
+      ]
+    },
+    "topTeams": [
+      { "rank": 1, "teamName": "Manchester City", "totalPredictions": 45, "accuracy": 75.5 },
+      { "rank": 2, "teamName": "Liverpool", "totalPredictions": 42, "accuracy": 72.3 },
+      { "rank": 3, "teamName": "Arsenal", "totalPredictions": 38, "accuracy": 71.0 },
+      { "rank": 4, "teamName": "Chelsea", "totalPredictions": 35, "accuracy": 68.5 },
+      { "rank": 5, "teamName": "Manchester United", "totalPredictions": 33, "accuracy": 65.2 }
+    ],
+    "confidenceDistribution": [
+      { "level": "High", "percentage": 45, "count": 57 },
+      { "level": "Medium", "percentage": 35, "count": 44 },
+      { "level": "Low", "percentage": 20, "count": 26 }
+    ],
+    "topTeamsLegacy": [
+      { "name": "Manchester City", "accuracy": 85, "predictions": 12 },
+      { "name": "Arsenal", "accuracy": 78, "predictions": 10 },
+      { "name": "Liverpool", "accuracy": 75, "predictions": 11 },
+      { "name": "Newcastle", "accuracy": 72, "predictions": 9 },
+      { "name": "Chelsea", "accuracy": 70, "predictions": 10 }
+    ],
+    "surprises": [
+      { "match": "Brighton vs Man United", "predicted": 15, "outcome": "Brighton Won", "date": "Oct 20" },
+      { "match": "Aston Villa vs Man City", "predicted": 20, "outcome": "Aston Villa Won", "date": "Oct 18" },
+      { "match": "Wolves vs Liverpool", "predicted": 12, "outcome": "Draw", "date": "Oct 15" }
+    ],
+    "confidenceDistributionLegacy": {
+      "high": 45,
+      "medium": 35,
+      "low": 20
+    }
+  },
+
+  "bettingTips": [
+    { "code": "1", "description": "Home Team Wins" },
+    { "code": "X", "description": "Draw" },
+    { "code": "2", "description": "Away Team Wins" },
+    { "code": "1X", "description": "Home Team Wins or Draw" },
+    { "code": "X2", "description": "Away Team Wins or Draw" },
+    { "code": "GG", "description": "Both Teams Will Score" },
+    { "code": "NG", "description": "At least one team won't score" },
+    { "code": "O0.5", "description": "Over 0.5 Goals" },
+    { "code": "U0.5", "description": "Under 0.5 Goals" },
+    { "code": "O1.5", "description": "Over 1.5 Goals" },
+    { "code": "U1.5", "description": "Under 1.5 Goals" },
+    { "code": "O2.5", "description": "Over 2.5 Goals" },
+    { "code": "U2.5", "description": "Under 2.5 Goals" },
+    { "code": "O3.5", "description": "Over 3.5 Goals" },
+    { "code": "U3.5", "description": "Under 3.5 Goals" },
+    { "code": "O4.5", "description": "Over 4.5 Goals" },
+    { "code": "U4.5", "description": "Under 4.5 Goals" },
+    { "code": "HT 1", "description": "Home Team Wins First Half" },
+    { "code": "HT X", "description": "Draw at Half Time" },
+    { "code": "HT 2", "description": "Away Team Wins First Half" },
+    { "code": "CS", "description": "Correct Score" },
+    { "code": "DNB", "description": "Draw No Bet" },
+    { "code": "DC", "description": "Double Chance" },
+    { "code": "AH", "description": "Asian Handicap" },
+    { "code": "EH", "description": "European Handicap" }
+  ],
+
+  "navigation": {
+    "menuItems": [
+      { "label": "Bet of the day", "route": "/(tabs)", "icon": "star" },
+      { "label": "Bankers", "route": "/(tabs)/insights", "icon": "football" },
+      { "label": "Progress", "route": "/(tabs)/progress", "icon": "trending-up" },
+      { "label": "Tutorial", "route": "/tutorial", "icon": "help-circle" },
+      { "label": "Terms and Conditions", "route": "/terms-of-service", "icon": "document-text" },
+      { "label": "Privacy Policy", "route": "/privacy-policy", "icon": "shield-checkmark" },
+      { "label": "Contact Us", "route": "/help-faq", "icon": "mail" }
+    ]
+  },
+
+  "faq": {
+    "categories": [
+      {
+        "title": "Getting Started",
+        "icon": "rocket-outline",
+        "items": [
+          {
+            "question": "How do I create an account?",
+            "answer": "You can create an account by clicking the \"Sign Up\" tab on the authentication screen. Enter your name, email, and password, or use the \"Continue with Google\" option for quick registration."
+          },
+          {
+            "question": "Is the app free to use?",
+            "answer": "Yes! The app is free to download and use. We offer basic predictions and insights at no cost. Premium features with advanced analytics will be available in future updates."
+          },
+          {
+            "question": "How accurate are the predictions?",
+            "answer": "Our AI-powered predictions analyze multiple factors including team form, player statistics, head-to-head records, and injury reports. While we strive for high accuracy, please remember that football is unpredictable and predictions are for informational purposes only."
+          }
+        ]
+      },
+      {
+        "title": "Predictions & Insights",
+        "icon": "analytics-outline",
+        "items": [
+          {
+            "question": "How are match predictions calculated?",
+            "answer": "Our AI model analyzes historical data, team performance, player statistics, recent form, injuries, and other relevant factors to generate probability-based predictions for each match outcome (win, draw, loss)."
+          },
+          {
+            "question": "What does AI Confidence mean?",
+            "answer": "AI Confidence indicates how certain our model is about the prediction. High confidence means strong data supports the prediction, Medium suggests balanced factors, and Low indicates uncertainty or close competition."
+          },
+          {
+            "question": "How often are predictions updated?",
+            "answer": "Predictions are updated regularly as new data becomes available, including team news, lineup changes, and injury updates. We recommend checking back closer to match time for the most accurate predictions."
+          },
+          {
+            "question": "Can I view past predictions?",
+            "answer": "Currently, the app focuses on upcoming matches. Historical prediction tracking and accuracy reports will be available in a future update."
+          }
+        ]
+      },
+      {
+        "title": "Account & Settings",
+        "icon": "settings-outline",
+        "items": [
+          {
+            "question": "How do I reset my password?",
+            "answer": "On the login screen, click \"Forgot Password?\" and follow the steps to receive a verification code via email. Enter the code and create your new password."
+          },
+          {
+            "question": "Can I change my notification settings?",
+            "answer": "Yes! Go to the Profile tab and toggle \"Push Notifications\" on or off based on your preference. You can also manage notifications through your device settings."
+          },
+          {
+            "question": "How do I delete my account?",
+            "answer": "Account deletion is not currently available in the app. Please contact our support team at support@aifootballapp.com to request account deletion."
+          },
+          {
+            "question": "Can I use the app without an account?",
+            "answer": "Currently, an account is required to access predictions and insights. This helps us personalize your experience and save your preferences."
+          }
+        ]
+      },
+      {
+        "title": "Technical Support",
+        "icon": "help-buoy-outline",
+        "items": [
+          {
+            "question": "The app is running slowly. What should I do?",
+            "answer": "Try closing and reopening the app. If the issue persists, clear the app cache from your device settings or reinstall the app. Make sure you're running the latest version."
+          },
+          {
+            "question": "I'm not receiving notifications.",
+            "answer": "Check that notifications are enabled in both the app settings (Profile > Push Notifications) and your device settings. Make sure you have a stable internet connection."
+          },
+          {
+            "question": "The app crashes when I open it.",
+            "answer": "First, ensure you're using the latest app version. Try restarting your device and reinstalling the app. If the problem continues, contact support with your device model and OS version."
+          },
+          {
+            "question": "How do I report a bug?",
+            "answer": "We appreciate bug reports! Please email support@aifootballapp.com with a description of the issue, steps to reproduce it, and screenshots if possible."
+          }
+        ]
+      }
+    ],
+    "supportEmail": "support@aifootballapp.com"
+  },
+
+  "settings": {
+    "languages": [
+      { "code": "en", "name": "English", "flag": "🇬🇧" },
+      { "code": "tr", "name": "Turkish", "flag": "🇹🇷" },
+      { "code": "de", "name": "German", "flag": "🇩🇪" },
+      { "code": "fr", "name": "French", "flag": "🇫🇷" },
+      { "code": "es", "name": "Spanish", "flag": "🇪🇸" }
+    ],
+    "oddsFormats": [
+      { "code": "decimal", "name": "Decimal (1.50)" },
+      { "code": "fractional", "name": "Fractional (1/2)" },
+      { "code": "american", "name": "American (-200)" }
+    ],
+    "timezones": [
+      { "code": "UTC", "name": "UTC (GMT+0)" },
+      { "code": "Europe/London", "name": "London (GMT+0/+1)" },
+      { "code": "Europe/Istanbul", "name": "Istanbul (GMT+3)" },
+      { "code": "America/New_York", "name": "New York (GMT-5/-4)" },
+      { "code": "America/Los_Angeles", "name": "Los Angeles (GMT-8/-7)" }
+    ]
+  },
+
+  "onboarding": {
+    "screens": [
+      {
+        "id": 1,
+        "title": "AI-Powered Predictions",
+        "description": "Get accurate match predictions powered by advanced AI algorithms analyzing thousands of data points.",
+        "image": "onboarding_predictions"
+      },
+      {
+        "id": 2,
+        "title": "Real-Time Insights",
+        "description": "Stay updated with live match statistics, team form analysis, and betting trends.",
+        "image": "onboarding_insights"
+      },
+      {
+        "id": 3,
+        "title": "Track Your Success",
+        "description": "Monitor your prediction accuracy and improve your betting strategy over time.",
+        "image": "onboarding_tracking"
+      }
+    ]
+  },
+
+  "dateFilters": ["yesterday", "today", "tomorrow"],
+  "matchTypeFilters": ["all", "upcoming"],
+  "timeFilters": ["week", "month"],
+  "confidenceLevels": ["High", "Medium", "Low"]
+}

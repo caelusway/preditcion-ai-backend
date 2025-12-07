@@ -30,6 +30,12 @@ const router = Router();
  *           type: string
  *           enum: [upcoming, live, finished]
  *         description: Filter by match status
+ *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           enum: [yesterday, today, tomorrow]
+ *         description: Filter by date
  *     responses:
  *       200:
  *         description: Paginated list of matches
@@ -70,6 +76,46 @@ router.get('/', matchesController.getMatches);
 
 /**
  * @swagger
+ * /matches/upcoming:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get upcoming matches
+ *     responses:
+ *       200:
+ *         description: List of upcoming matches
+ */
+router.get('/upcoming', matchesController.getUpcomingMatches);
+
+/**
+ * @swagger
+ * /matches/home-stats:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get home stats (predicted, upcoming, won counts)
+ *     responses:
+ *       200:
+ *         description: Home stats data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 predicted:
+ *                   type: integer
+ *                   example: 571
+ *                 upcoming:
+ *                   type: integer
+ *                   example: 536
+ *                 won:
+ *                   type: integer
+ *                   example: 23
+ */
+router.get('/home-stats', matchesController.getHomeStats);
+
+/**
+ * @swagger
  * /matches/{id}:
  *   get:
  *     tags:
@@ -91,5 +137,89 @@ router.get('/', matchesController.getMatches);
  *         description: Match not found
  */
 router.get('/:id', matchesController.getMatchById);
+
+/**
+ * @swagger
+ * /matches/{id}/predictions:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get AI predictions for match
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: AI predictions for the match
+ *       404:
+ *         description: Match not found
+ */
+router.get('/:id/predictions', matchesController.getMatchPredictions);
+
+/**
+ * @swagger
+ * /matches/{id}/statistics:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get match statistics
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: Match statistics
+ *       404:
+ *         description: Match not found
+ */
+router.get('/:id/statistics', matchesController.getMatchStatistics);
+
+/**
+ * @swagger
+ * /matches/{id}/form:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get team form data
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: Team form statistics
+ */
+router.get('/:id/form', matchesController.getMatchForm);
+
+/**
+ * @swagger
+ * /matches/{id}/recent:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get recent matches for teams
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: Recent matches for both teams
+ */
+router.get('/:id/recent', matchesController.getRecentMatches);
 
 export default router;
