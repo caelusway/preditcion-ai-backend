@@ -6,24 +6,27 @@ WORKDIR /app
 # Install OpenSSL for Prisma
 RUN apk add --no-cache openssl
 
-# Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+# Copy package files first (for better caching)
+COPY package.json package-lock.json ./
 
-# Install all dependencies (including devDependencies for build)
+# Install all dependencies
 RUN npm ci
 
-# Generate Prisma Client
+# Copy prisma schema and generate client
+COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy source code
-COPY . .
+# Copy TypeScript config files
+COPY tsconfig.json tsconfig.build.json ./
 
-# Build TypeScript
-RUN npm run build
+# Copy source code
+COPY src ./src
+
+# Build TypeScript - use the installed typescript directly
+RUN node ./node_modules/typescript/bin/tsc --project tsconfig.build.json
 
 # Production stage
-FROM node:20-alpine
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -31,13 +34,13 @@ WORKDIR /app
 RUN apk add --no-cache openssl libssl3
 
 # Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY package.json package-lock.json ./
 
 # Install production dependencies only
 RUN npm ci --omit=dev
 
-# Generate Prisma Client in production stage
+# Copy prisma and generate client
+COPY prisma ./prisma/
 RUN npx prisma generate
 
 # Copy built application from builder
@@ -45,10 +48,8 @@ COPY --from=builder /app/dist ./dist
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Set ownership
-RUN chown -R nodejs:nodejs /app
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
 
 USER nodejs
 
