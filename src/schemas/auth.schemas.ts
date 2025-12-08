@@ -47,6 +47,7 @@ export const resetPasswordSchema = z.object({
 export const verifyEmailSchema = z.object({
   query: z.object({
     token: z.string().min(1, 'Token is required'),
+    redirect: z.string().optional(),
   }),
 });
 

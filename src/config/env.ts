@@ -8,6 +8,12 @@ const envSchema = z.object({
   PORT: z.string().default('3000').transform(Number),
   HOST: z.string().default('0.0.0.0'),
 
+  // App URLs
+  API_URL: z.string().url().default('http://localhost:3000'),
+  APP_URL: z.string().url().default('http://localhost:8081'),
+  APP_SCHEME: z.string().default('predictionai'), // Deep link scheme for mobile app
+  APP_NAME: z.string().default('AI Football Predictions'),
+
   DATABASE_URL: z.string().url(),
 
   JWT_SECRET: z.string().min(32),
