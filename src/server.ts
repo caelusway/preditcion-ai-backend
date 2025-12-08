@@ -4,6 +4,7 @@ import { logger } from './lib/logger';
 import { prisma } from './lib/prisma';
 
 const PORT = env.PORT;
+const HOST = env.HOST;
 
 async function startServer() {
   try {
@@ -11,8 +12,8 @@ async function startServer() {
     await prisma.$connect();
     logger.info('✅ Database connected successfully');
 
-    // Start server - bind to 0.0.0.0 to accept external connections
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    // Start server - bind to HOST (default 0.0.0.0) to accept external connections
+    const server = app.listen(PORT, HOST, () => {
       const baseUrl = env.NODE_ENV === 'production'
         ? 'https://decentralabs.tech'
         : `http://localhost:${PORT}`;

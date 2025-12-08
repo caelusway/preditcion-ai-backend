@@ -253,3 +253,5 @@ router.get('/filters', staticController.getFilters);
 
 export default router;
 
+
+

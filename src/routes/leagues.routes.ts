@@ -52,3 +52,5 @@ router.get('/:id/standings', leaguesController.getStandings);
 
 export default router;
 
+
+
