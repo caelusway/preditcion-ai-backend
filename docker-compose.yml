@@ -2,41 +2,18 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
+    build: .
     ports:
-      - "${PORT:-3000}:3000"
+      - "3000:3000"
     environment:
-      NODE_ENV: production
-      PORT: "3000"
-      HOST: "0.0.0.0"
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-15m}
-      REFRESH_TOKEN_TTL: ${REFRESH_TOKEN_TTL:-30d}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@yourdomain.com}
-      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
-      RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RAPIDAPI_KEY: ${RAPIDAPI_KEY:-}
-      FOOTBALL_DATA_SOURCE: ${FOOTBALL_DATA_SOURCE:-dummy}
-      AUTH_RATE_LIMIT: ${AUTH_RATE_LIMIT:-50}
-      GENERAL_RATE_LIMIT: ${GENERAL_RATE_LIMIT:-300}
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    command: >
-      sh -c "npx prisma migrate deploy && node dist/server.js"
-    labels:
-      # Coolify/Traefik labels for reverse proxy
-      - "traefik.enable=true"
-      - "traefik.http.routers.prediction-api.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.routers.prediction-api.entrypoints=websecure"
-      - "traefik.http.routers.prediction-api.tls.certresolver=letsencrypt"
-      - "traefik.http.services.prediction-api.loadbalancer.server.port=3000"
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - EMAIL_PROVIDER=${EMAIL_PROVIDER:-console}
+      - FOOTBALL_DATA_SOURCE=${FOOTBALL_DATA_SOURCE:-dummy}
+    restart: unless-stopped
+
