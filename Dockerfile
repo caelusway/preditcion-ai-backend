@@ -19,8 +19,8 @@ RUN npx prisma generate
 # Copy source code
 COPY . .
 
-# Build TypeScript (using local typescript from node_modules)
-RUN ./node_modules/.bin/tsc --project tsconfig.build.json
+# Build TypeScript
+RUN npm run build
 
 # Production stage
 FROM node:20-alpine
