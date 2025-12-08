@@ -79,16 +79,12 @@ const emailWrapper = (content: string) => `
 `;
 
 class EmailService {
-  private getApiUrl(): string {
-    return env.API_URL;
-  }
-
-  private getAppUrl(): string {
+  private getBaseUrl(): string {
     return env.APP_URL;
   }
 
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const verificationUrl = `${this.getApiUrl()}/auth/verify-email?token=${token}`;
+    const verificationUrl = `${this.getBaseUrl()}/auth/verify-email?token=${token}`;
 
     const content = `
       <div style="text-align: center; margin-bottom: 32px;">
@@ -141,7 +137,7 @@ class EmailService {
     // Deep link for mobile app
     const mobileDeepLink = `${env.APP_SCHEME}://reset-password?token=${token}`;
     // Web fallback URL
-    const webResetUrl = `${this.getAppUrl()}/reset-password?token=${token}`;
+    const webResetUrl = `${this.getBaseUrl()}/reset-password?token=${token}`;
 
     const content = `
       <div style="text-align: center; margin-bottom: 32px;">
@@ -210,7 +206,7 @@ class EmailService {
   }
 
   async sendWelcomeEmail(email: string, name: string): Promise<void> {
-    const appUrl = this.getAppUrl();
+    const appUrl = this.getBaseUrl();
 
     const content = `
       <div style="text-align: center; margin-bottom: 32px;">
