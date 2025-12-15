@@ -31,6 +31,9 @@ const router = Router();
  *             required:
  *               - email
  *               - password
+ *               - username
+ *               - name
+ *               - surname
  *             properties:
  *               email:
  *                 type: string
@@ -40,14 +43,50 @@ const router = Router();
  *                 type: string
  *                 format: password
  *                 minLength: 8
- *                 example: SecurePass123
+ *                 example: SecurePass123!
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
+ *                 example: johndoe
+ *                 description: Unique username for easy login
+ *               name:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 100
+ *                 example: John
+ *               surname:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 100
+ *                 example: Doe
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     emailVerified:
+ *                       type: boolean
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
  *       400:
  *         description: Validation error
  *       409:
- *         description: Email already exists
+ *         description: Email or username already exists
  */
 router.post('/register', validate(registerSchema), authController.register);
 
@@ -57,7 +96,7 @@ router.post('/register', validate(registerSchema), authController.register);
  *   post:
  *     tags:
  *       - Auth
- *     summary: Login user
+ *     summary: Login user with email or username
  *     requestBody:
  *       required: true
  *       content:
@@ -65,20 +104,44 @@ router.post('/register', validate(registerSchema), authController.register);
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - identifier
  *               - password
  *             properties:
- *               email:
+ *               identifier:
  *                 type: string
- *                 format: email
+ *                 description: Email address or username
+ *                 example: user@example.com or johndoe
  *               password:
  *                 type: string
  *                 format: password
  *     responses:
  *       200:
  *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     emailVerified:
+ *                       type: boolean
  *       401:
  *         description: Invalid credentials
+ *       403:
+ *         description: Email not verified
  */
 router.post('/login', validate(loginSchema), authController.login);
 

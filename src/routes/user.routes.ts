@@ -13,11 +13,47 @@ const router = Router();
  *     tags:
  *       - User
  *     summary: Get current user profile
+ *     description: Returns user profile including username and selected team
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: User profile retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                 email:
+ *                   type: string
+ *                 username:
+ *                   type: string
+ *                   description: User's unique username for easy login
+ *                 name:
+ *                   type: string
+ *                 surname:
+ *                   type: string
+ *                 emailVerified:
+ *                   type: boolean
+ *                 selectedTeam:
+ *                   type: object
+ *                   nullable: true
+ *                   description: User's selected favorite team
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     logoUrl:
+ *                       type: string
+ *                     league:
+ *                       type: string
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
  *       401:
  *         description: Unauthorized
  *   put:
@@ -67,14 +103,35 @@ router.put(
  *     tags:
  *       - User
  *     summary: Delete user account
- *     description: Permanently delete the user account and all associated data
+ *     description: Permanently delete the user account and all associated data. Requires password confirmation.
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - password
+ *             properties:
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 description: Current password for confirmation
  *     responses:
  *       200:
  *         description: Account deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Account deleted successfully
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized or invalid password
  */
 router.delete('/', requireAuth, authController.deleteAccount);
 

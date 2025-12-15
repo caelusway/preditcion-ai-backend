@@ -9,7 +9,8 @@ const router = Router();
  *   get:
  *     tags:
  *       - Matches
- *     summary: Get list of matches (paginated)
+ *     summary: Get matches grouped by league
+ *     description: Returns matches grouped by league with optional date filtering
  *     parameters:
  *       - in: query
  *         name: page
@@ -34,43 +35,79 @@ const router = Router();
  *         name: date
  *         schema:
  *           type: string
- *           enum: [yesterday, today, tomorrow]
- *         description: Filter by date
+ *           example: "2025-12-15"
+ *         description: Filter by specific date (YYYY-MM-DD format) or use yesterday/today/tomorrow
  *     responses:
  *       200:
- *         description: Paginated list of matches
+ *         description: Matches grouped by league
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 data:
+ *                 date:
+ *                   type: string
+ *                   example: "2025-12-15"
+ *                 matches:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Match'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     currentPage:
- *                       type: integer
- *                       example: 1
- *                     itemsPerPage:
- *                       type: integer
- *                       example: 20
- *                     totalItems:
- *                       type: integer
- *                       example: 70
- *                     totalPages:
- *                       type: integer
- *                       example: 4
- *                     hasNextPage:
- *                       type: boolean
- *                       example: true
- *                     hasPreviousPage:
- *                       type: boolean
- *                       example: false
- *       401:
- *         description: Unauthorized
+ *                     type: object
+ *                     properties:
+ *                       league:
+ *                         type: string
+ *                         example: "Premier League"
+ *                       country:
+ *                         type: string
+ *                         example: "England"
+ *                       leagueImg:
+ *                         type: string
+ *                         example: "https://media.api-sports.io/football/leagues/39.png"
+ *                       leagueId:
+ *                         type: integer
+ *                         example: 39
+ *                       matches:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                             apiId:
+ *                               type: string
+ *                             homeTeam:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: string
+ *                                 name:
+ *                                   type: string
+ *                                 logoUrl:
+ *                                   type: string
+ *                             awayTeam:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: string
+ *                                 name:
+ *                                   type: string
+ *                                 logoUrl:
+ *                                   type: string
+ *                             kickoffTime:
+ *                               type: string
+ *                               format: date-time
+ *                             status:
+ *                               type: string
+ *                               enum: [upcoming, live, finished]
+ *                             homeScore:
+ *                               type: integer
+ *                             awayScore:
+ *                               type: integer
+ *                             venue:
+ *                               type: string
+ *                             referee:
+ *                               type: string
+ *                             round:
+ *                               type: string
  */
 router.get('/', matchesController.getMatches);
 
@@ -120,7 +157,8 @@ router.get('/home-stats', matchesController.getHomeStats);
  *   get:
  *     tags:
  *       - Matches
- *     summary: Get match details with prediction
+ *     summary: Get match details with statistics and predictions
+ *     description: Returns comprehensive match data including statistics, form, recent matches, standings, and AI predictions
  *     parameters:
  *       - in: path
  *         name: id
@@ -130,9 +168,131 @@ router.get('/home-stats', matchesController.getHomeStats);
  *         description: Match ID
  *     responses:
  *       200:
- *         description: Match details with prediction
- *       401:
- *         description: Unauthorized
+ *         description: Match details with all statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 match:
+ *                   type: object
+ *                   description: Basic match information
+ *                 matchStatistics:
+ *                   type: object
+ *                   description: Average per match statistics
+ *                   properties:
+ *                     totalGoals:
+ *                       type: object
+ *                       properties:
+ *                         home:
+ *                           type: number
+ *                         away:
+ *                           type: number
+ *                     goalsScored:
+ *                       type: object
+ *                     goalsAgainst:
+ *                       type: object
+ *                     possession:
+ *                       type: object
+ *                     totalShots:
+ *                       type: object
+ *                     shotsOnGoal:
+ *                       type: object
+ *                     corners:
+ *                       type: object
+ *                     yellowCards:
+ *                       type: object
+ *                 formStatistics:
+ *                   type: object
+ *                   description: Last 10 matches form statistics
+ *                   properties:
+ *                     wins:
+ *                       type: object
+ *                     over15Goals:
+ *                       type: object
+ *                     over25Goals:
+ *                       type: object
+ *                     over35Goals:
+ *                       type: object
+ *                     bothTeamsScored:
+ *                       type: object
+ *                 homeTeamRecentMatches:
+ *                   type: array
+ *                   description: Home team's last 10 matches
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                       result:
+ *                         type: string
+ *                         enum: [W, D, L]
+ *                       homeTeam:
+ *                         type: object
+ *                       awayTeam:
+ *                         type: object
+ *                       homeScore:
+ *                         type: integer
+ *                       awayScore:
+ *                         type: integer
+ *                 awayTeamRecentMatches:
+ *                   type: array
+ *                   description: Away team's last 10 matches
+ *                 standings:
+ *                   type: array
+ *                   description: League standings
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       position:
+ *                         type: integer
+ *                       team:
+ *                         type: object
+ *                       matches:
+ *                         type: integer
+ *                       goals:
+ *                         type: string
+ *                       points:
+ *                         type: integer
+ *                       isHighlighted:
+ *                         type: boolean
+ *                 aiPredictions:
+ *                   type: array
+ *                   description: AI prediction tips
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       label:
+ *                         type: string
+ *                       prediction:
+ *                         type: string
+ *                       odds:
+ *                         type: number
+ *                       confidence:
+ *                         type: integer
+ *                       oddsDirection:
+ *                         type: string
+ *                 matchHeaderOdds:
+ *                   type: object
+ *                   properties:
+ *                     homeWin:
+ *                       type: object
+ *                     draw:
+ *                       type: object
+ *                     awayWin:
+ *                       type: object
+ *                 statsPredictions:
+ *                   type: object
+ *                   description: Predicted match statistics
+ *                   properties:
+ *                     xG:
+ *                       type: object
+ *                     possession:
+ *                       type: object
+ *                     totalShots:
+ *                       type: object
+ *                     corners:
+ *                       type: object
  *       404:
  *         description: Match not found
  */

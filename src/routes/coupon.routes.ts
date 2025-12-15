@@ -11,11 +11,64 @@ const router = Router();
  *     tags:
  *       - Coupons
  *     summary: Get all user coupons
+ *     description: Returns all coupons with selections and calculated odds
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of coupons
+ *         description: List of coupons with odds
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                     enum: [active, settled, cancelled]
+ *                   totalOdds:
+ *                     type: number
+ *                     description: Combined odds of all selections
+ *                     example: 5.67
+ *                   selections:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         matchApiId:
+ *                           type: string
+ *                         homeTeamName:
+ *                           type: string
+ *                         awayTeamName:
+ *                           type: string
+ *                         kickoffTime:
+ *                           type: string
+ *                           format: date-time
+ *                         league:
+ *                           type: string
+ *                         predictionType:
+ *                           type: string
+ *                           enum: [1x2, btts, over_under, double_chance]
+ *                           example: btts
+ *                         prediction:
+ *                           type: string
+ *                           example: "Yes"
+ *                         odds:
+ *                           type: number
+ *                           example: 1.65
+ *                         result:
+ *                           type: string
+ *                           enum: [pending, won, lost]
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  *       401:
  *         description: Unauthorized
  */
@@ -61,7 +114,8 @@ router.get('/past', requireAuth, couponController.getPastCoupons);
  *   get:
  *     tags:
  *       - Coupons
- *     summary: Get coupon by ID
+ *     summary: Get coupon by ID with full details
+ *     description: Returns coupon with all selections, odds, and results
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -72,7 +126,45 @@ router.get('/past', requireAuth, couponController.getPastCoupons);
  *           type: string
  *     responses:
  *       200:
- *         description: Coupon details with selections
+ *         description: Coupon details with selections and odds
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [active, settled, cancelled]
+ *                 totalOdds:
+ *                   type: number
+ *                   example: 5.67
+ *                 selections:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       homeTeamName:
+ *                         type: string
+ *                       awayTeamName:
+ *                         type: string
+ *                       predictionType:
+ *                         type: string
+ *                         example: "1x2"
+ *                       prediction:
+ *                         type: string
+ *                         example: "1"
+ *                       odds:
+ *                         type: number
+ *                         example: 1.85
+ *                       result:
+ *                         type: string
+ *                         enum: [pending, won, lost]
  *       401:
  *         description: Unauthorized
  *       404:
