@@ -13,11 +13,17 @@ interface DeviceMetadata {
 }
 
 export class AuthService {
-  async register(email: string, password: string, name: string, surname: string) {
-    // Check if user exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+  async register(email: string, username: string, password: string, name: string, surname: string) {
+    // Check if email exists
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
       throw new AppError(409, 'Email already exists');
+    }
+
+    // Check if username exists
+    const existingUsername = await prisma.user.findUnique({ where: { username } });
+    if (existingUsername) {
+      throw new AppError(409, 'Username already exists');
     }
 
     // Hash password
@@ -27,6 +33,7 @@ export class AuthService {
     const user = await prisma.user.create({
       data: {
         email,
+        username,
         passwordHash,
         name,
         surname,
@@ -48,29 +55,36 @@ export class AuthService {
     // Send verification email
     await emailService.sendVerificationEmail(email, token);
 
-    logger.info({ userId: user.id, email: user.email }, 'User registered');
+    logger.info({ userId: user.id, email: user.email, username: user.username }, 'User registered');
 
     return {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt.toISOString(),
       },
     };
   }
 
-  async login(email: string, password: string, metadata: DeviceMetadata) {
-    // Find user
-    const user = await prisma.user.findUnique({ where: { email } });
+  async login(identifier: string, password: string, metadata: DeviceMetadata) {
+    // Find user by email or username
+    const isEmail = identifier.includes('@');
+    const user = await prisma.user.findFirst({
+      where: isEmail
+        ? { email: identifier }
+        : { username: identifier },
+    });
+
     if (!user) {
-      throw new AppError(401, 'Invalid email or password');
+      throw new AppError(401, 'Invalid credentials');
     }
 
     // Verify password
     const isValid = await verifyPassword(user.passwordHash, password);
     if (!isValid) {
-      throw new AppError(401, 'Invalid email or password');
+      throw new AppError(401, 'Invalid credentials');
     }
 
     // Check if email is verified
@@ -94,7 +108,7 @@ export class AuthService {
     const accessToken = signAccessToken(user.id, user.email);
     const refreshToken = signRefreshToken(user.id, refreshTokenRecord.id);
 
-    logger.info({ userId: user.id, email: user.email }, 'User logged in');
+    logger.info({ userId: user.id, email: user.email, username: user.username }, 'User logged in');
 
     return {
       accessToken,
@@ -102,6 +116,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        username: user.username,
         emailVerified: user.emailVerified,
       },
     };
@@ -310,6 +325,9 @@ export class AuthService {
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      include: {
+        selectedTeam: true,
+      },
     });
 
     if (!user) {
@@ -319,11 +337,85 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      username: user.username,
       name: user.name,
       surname: user.surname,
       emailVerified: user.emailVerified,
+      selectedTeam: user.selectedTeam ? {
+        id: user.selectedTeam.id,
+        name: user.selectedTeam.name,
+        logoUrl: user.selectedTeam.logoUrl,
+        country: user.selectedTeam.country,
+        league: user.selectedTeam.league,
+      } : null,
       createdAt: user.createdAt.toISOString(),
     };
+  }
+
+  async resendVerification(email: string) {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      // Return success to prevent email enumeration
+      return { message: 'If an account exists with that email, a verification email has been sent.' };
+    }
+
+    if (user.emailVerified) {
+      throw new AppError(400, 'Email is already verified');
+    }
+
+    // Check if a verification token was sent recently (rate limit: 2 minutes)
+    const recentToken = await prisma.emailVerificationToken.findFirst({
+      where: {
+        userId: user.id,
+        createdAt: {
+          gte: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
+        },
+      },
+    });
+
+    if (recentToken) {
+      throw new AppError(429, 'Please wait before requesting another verification email');
+    }
+
+    // Delete old tokens
+    await prisma.emailVerificationToken.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Create new verification token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await prisma.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Send verification email
+    await emailService.sendVerificationEmail(email, token);
+
+    logger.info({ userId: user.id, email }, 'Verification email resent');
+
+    return { message: 'Verification email has been sent' };
+  }
+
+  async deleteAccount(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // Delete user (cascading deletes will handle related records)
+    await prisma.user.delete({ where: { id: userId } });
+
+    logger.info({ userId, email: user.email }, 'Account deleted');
+
+    return { message: 'Account deleted successfully' };
   }
 
   async updateProfile(
@@ -346,6 +438,9 @@ export class AuthService {
         data: {
           ...data,
           emailVerified: false,
+        },
+        include: {
+          selectedTeam: true,
         },
       });
 
@@ -374,9 +469,17 @@ export class AuthService {
       return {
         id: user.id,
         email: user.email,
+        username: user.username,
         name: user.name,
         surname: user.surname,
         emailVerified: user.emailVerified,
+        selectedTeam: user.selectedTeam ? {
+          id: user.selectedTeam.id,
+          name: user.selectedTeam.name,
+          logoUrl: user.selectedTeam.logoUrl,
+          country: user.selectedTeam.country,
+          league: user.selectedTeam.league,
+        } : null,
         createdAt: user.createdAt.toISOString(),
       };
     }
@@ -385,6 +488,9 @@ export class AuthService {
     const user = await prisma.user.update({
       where: { id: userId },
       data,
+      include: {
+        selectedTeam: true,
+      },
     });
 
     logger.info({ userId }, 'Profile updated');
@@ -392,9 +498,51 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      username: user.username,
       name: user.name,
       surname: user.surname,
       emailVerified: user.emailVerified,
+      selectedTeam: user.selectedTeam ? {
+        id: user.selectedTeam.id,
+        name: user.selectedTeam.name,
+        logoUrl: user.selectedTeam.logoUrl,
+        country: user.selectedTeam.country,
+        league: user.selectedTeam.league,
+      } : null,
+      createdAt: user.createdAt.toISOString(),
+    };
+  }
+
+  async selectTeam(userId: string, teamId: string) {
+    // Verify team exists
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) {
+      throw new AppError(404, 'Team not found');
+    }
+
+    // Update user's selected team
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { selectedTeamId: teamId },
+      include: { selectedTeam: true },
+    });
+
+    logger.info({ userId, teamId }, 'User selected team');
+
+    return {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      name: user.name,
+      surname: user.surname,
+      emailVerified: user.emailVerified,
+      selectedTeam: user.selectedTeam ? {
+        id: user.selectedTeam.id,
+        name: user.selectedTeam.name,
+        logoUrl: user.selectedTeam.logoUrl,
+        country: user.selectedTeam.country,
+        league: user.selectedTeam.league,
+      } : null,
       createdAt: user.createdAt.toISOString(),
     };
   }

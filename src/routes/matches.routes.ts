@@ -222,4 +222,93 @@ router.get('/:id/form', matchesController.getMatchForm);
  */
 router.get('/:id/recent', matchesController.getRecentMatches);
 
+/**
+ * @swagger
+ * /matches/{id}/odds:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get betting odds for a match
+ *     description: Returns real betting odds from bookmakers for various markets (1X2, Over/Under, BTTS, Double Chance)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Match ID
+ *     responses:
+ *       200:
+ *         description: Betting odds for the match
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 matchId:
+ *                   type: string
+ *                 homeTeam:
+ *                   type: string
+ *                 awayTeam:
+ *                   type: string
+ *                 bookmaker:
+ *                   type: string
+ *                 updatedAt:
+ *                   type: string
+ *                 markets:
+ *                   type: object
+ *                   properties:
+ *                     matchWinner:
+ *                       type: object
+ *                       description: "1X2 odds"
+ *                     overUnder:
+ *                       type: object
+ *                       description: "Goals Over/Under odds"
+ *                     btts:
+ *                       type: object
+ *                       description: "Both Teams to Score odds"
+ *                     doubleChance:
+ *                       type: object
+ *                       description: "Double Chance odds"
+ *       404:
+ *         description: Match not found
+ */
+router.get('/:id/odds', matchesController.getMatchOdds);
+
+/**
+ * @swagger
+ * /matches/backtest:
+ *   post:
+ *     tags:
+ *       - Matches
+ *     summary: Run backtest on historical matches
+ *     description: Evaluate prediction accuracy against finished matches
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - startDate
+ *               - endDate
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-12-01"
+ *               endDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-12-14"
+ *               limit:
+ *                 type: integer
+ *                 default: 50
+ *                 maximum: 100
+ *     responses:
+ *       200:
+ *         description: Backtest results with accuracy metrics
+ */
+router.post('/backtest', matchesController.runBacktest);
+
 export default router;

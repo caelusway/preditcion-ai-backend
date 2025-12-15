@@ -10,10 +10,12 @@ import userRoutes from './routes/user.routes';
 import matchesRoutes from './routes/matches.routes';
 import insightsRoutes from './routes/insights.routes';
 import healthRoutes from './routes/health.routes';
-import savedMatchRoutes from './routes/saved-match.routes';
 import userStatsRoutes from './routes/user-stats.routes';
 import staticRoutes from './routes/static.routes';
 import leaguesRoutes from './routes/leagues.routes';
+import teamRoutes from './routes/team.routes';
+import favoriteLeagueRoutes from './routes/favorite-league.routes';
+import couponRoutes from './routes/coupon.routes';
 
 const app = express();
 
@@ -38,17 +40,17 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 app.use('/health', healthRoutes);
 app.use('/auth', authRoutes);
 app.use('/me', userRoutes);
+app.use('/me/favorite-leagues', favoriteLeagueRoutes);
 app.use('/matches', matchesRoutes);
 app.use('/insights', insightsRoutes);
-app.use('/saved-matches', savedMatchRoutes);
 app.use('/stats', userStatsRoutes);
 app.use('/static', staticRoutes);
 app.use('/leagues', leaguesRoutes);
+app.use('/teams', teamRoutes);
+app.use('/coupons', couponRoutes);
 
-// Alias routes for API compatibility with mockData.json expected endpoints
-// /user/* routes can also be accessed via /me/*
+// Alias routes for API compatibility
 app.use('/user/profile', userRoutes);
-app.use('/user/saved-matches', savedMatchRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

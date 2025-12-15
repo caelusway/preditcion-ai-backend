@@ -10,6 +10,7 @@ import {
   ResetPasswordInput,
   VerifyEmailInput,
   UpdateProfileInput,
+  ResendVerificationInput,
 } from '../schemas/auth.schemas';
 
 // HTML page that redirects to mobile app
@@ -113,8 +114,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const { email, password, name, surname } = req.body;
-      const result = await authService.register(email, password, name, surname);
+      const { email, username, password, name, surname } = req.body;
+      const result = await authService.register(email, username, password, name, surname);
       res.status(201).json(result);
     } catch (error) {
       next(error);
@@ -127,13 +128,48 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const { email, password } = req.body;
+      const { identifier, password } = req.body;
       const metadata = {
         device: req.headers['x-device-name'] as string,
         ip: req.ip || req.socket.remoteAddress,
         userAgent: req.headers['user-agent'],
       };
-      const result = await authService.login(email, password, metadata);
+      const result = await authService.login(identifier, password, metadata);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resendVerification(
+    req: Request<{}, {}, ResendVerificationInput>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { email } = req.body;
+      const result = await authService.resendVerification(email);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const result = await authService.deleteAccount(userId);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async selectTeam(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const { teamId } = req.body;
+      const result = await authService.selectTeam(userId, teamId);
       res.status(200).json(result);
     } catch (error) {
       next(error);

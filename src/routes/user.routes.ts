@@ -60,4 +60,54 @@ router.put(
   authController.updateProfile
 );
 
+/**
+ * @swagger
+ * /me:
+ *   delete:
+ *     tags:
+ *       - User
+ *     summary: Delete user account
+ *     description: Permanently delete the user account and all associated data
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account deleted successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete('/', requireAuth, authController.deleteAccount);
+
+/**
+ * @swagger
+ * /me/team:
+ *   post:
+ *     tags:
+ *       - User
+ *     summary: Select favorite team
+ *     description: Set the user's favorite team
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - teamId
+ *             properties:
+ *               teamId:
+ *                 type: string
+ *                 description: Team UUID
+ *     responses:
+ *       200:
+ *         description: Team selected successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Team not found
+ */
+router.post('/team', requireAuth, authController.selectTeam);
+
 export default router;

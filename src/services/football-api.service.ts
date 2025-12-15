@@ -92,6 +92,68 @@ interface Statistics {
   }>;
 }
 
+// League IDs for Top 5 European Leagues
+export const LEAGUE_IDS = {
+  PREMIER_LEAGUE: 39,
+  LA_LIGA: 140,
+  SERIE_A: 135,
+  BUNDESLIGA: 78,
+  LIGUE_1: 61,
+} as const;
+
+export const TOP_5_LEAGUES = [
+  LEAGUE_IDS.PREMIER_LEAGUE,
+  LEAGUE_IDS.LA_LIGA,
+  LEAGUE_IDS.SERIE_A,
+  LEAGUE_IDS.BUNDESLIGA,
+  LEAGUE_IDS.LIGUE_1,
+];
+
+interface LeagueInfo {
+  id: number;
+  name: string;
+  country: string;
+  logo: string;
+  flag: string;
+  season: number;
+  round: string;
+}
+
+interface Odds {
+  fixture: { id: number };
+  league: LeagueInfo;
+  bookmakers: Array<{
+    id: number;
+    name: string;
+    bets: Array<{
+      id: number;
+      name: string;
+      values: Array<{
+        value: string;
+        odd: string;
+      }>;
+    }>;
+  }>;
+}
+
+interface TeamStats {
+  team: { id: number; name: string; logo: string };
+  league: LeagueInfo;
+  form: string;
+  fixtures: {
+    played: { home: number; away: number; total: number };
+    wins: { home: number; away: number; total: number };
+    draws: { home: number; away: number; total: number };
+    loses: { home: number; away: number; total: number };
+  };
+  goals: {
+    for: { total: { home: number; away: number; total: number }; average: { home: string; away: string; total: string } };
+    against: { total: { home: number; away: number; total: number }; average: { home: string; away: string; total: string } };
+  };
+  clean_sheet: { home: number; away: number; total: number };
+  failed_to_score: { home: number; away: number; total: number };
+}
+
 export class FootballAPIService {
   // API-Football v3 official endpoint
   private baseURL = 'https://v3.football.api-sports.io';
@@ -99,8 +161,8 @@ export class FootballAPIService {
     'x-apisports-key': env.RAPIDAPI_KEY || '',
   };
 
-  // Premier League ID
-  private readonly PREMIER_LEAGUE_ID = 39;
+  // Premier League ID (for backwards compatibility)
+  private readonly PREMIER_LEAGUE_ID = LEAGUE_IDS.PREMIER_LEAGUE;
 
   /**
    * Make a GET request to API-Football v3
@@ -290,6 +352,184 @@ export class FootballAPIService {
     } catch (error) {
       logger.error({ error }, 'API-Football connection test failed');
       return false;
+    }
+  }
+
+  /**
+   * Get fixtures by date for specified leagues
+   * @param date - Date in YYYY-MM-DD format
+   * @param leagueIds - Array of league IDs (defaults to Top 5)
+   */
+  async getFixturesByDate(date: string, leagueIds: number[] = TOP_5_LEAGUES): Promise<Fixture[]> {
+    const allFixtures: Fixture[] = [];
+
+    // Football seasons typically run from August to May
+    // A date in January-July belongs to the previous year's season
+    // A date in August-December belongs to the current year's season
+    const targetDate = new Date(date);
+    const month = targetDate.getMonth(); // 0-11
+    const year = targetDate.getFullYear();
+    // If Jan-Jul (month 0-6), use previous year as season. If Aug-Dec (month 7-11), use current year
+    const season = month < 7 ? year - 1 : year;
+
+    for (const leagueId of leagueIds) {
+      try {
+        const fixtures = await this.get<Fixture>('/fixtures', {
+          date,
+          league: leagueId.toString(),
+          season: season.toString(),
+        });
+        allFixtures.push(...fixtures);
+      } catch (error) {
+        logger.warn({ leagueId, date, error }, 'Failed to fetch fixtures for league');
+      }
+    }
+
+    return allFixtures;
+  }
+
+  /**
+   * Get all teams for multiple leagues
+   */
+  async getTeamsForLeagues(leagueIds: number[] = TOP_5_LEAGUES, season: number = 2024): Promise<Array<{
+    leagueId: number;
+    leagueName: string;
+    country: string;
+    logo: string;
+    teams: Team[];
+  }>> {
+    const results: Array<{
+      leagueId: number;
+      leagueName: string;
+      country: string;
+      logo: string;
+      teams: Team[];
+    }> = [];
+
+    const leagueNames: Record<number, { name: string; country: string }> = {
+      [LEAGUE_IDS.PREMIER_LEAGUE]: { name: 'Premier League', country: 'England' },
+      [LEAGUE_IDS.LA_LIGA]: { name: 'La Liga', country: 'Spain' },
+      [LEAGUE_IDS.SERIE_A]: { name: 'Serie A', country: 'Italy' },
+      [LEAGUE_IDS.BUNDESLIGA]: { name: 'Bundesliga', country: 'Germany' },
+      [LEAGUE_IDS.LIGUE_1]: { name: 'Ligue 1', country: 'France' },
+    };
+
+    for (const leagueId of leagueIds) {
+      try {
+        const response = await this.get<any>('/teams', {
+          league: leagueId.toString(),
+          season: season.toString(),
+        });
+
+        // Extract teams from the response structure
+        const teams: Team[] = response.map((item: any) => ({
+          id: item.team.id,
+          name: item.team.name,
+          code: item.team.code,
+          country: item.team.country,
+          founded: item.team.founded,
+          national: item.team.national,
+          logo: item.team.logo,
+        }));
+
+        const leagueInfo = leagueNames[leagueId] || { name: 'Unknown League', country: 'Unknown' };
+
+        results.push({
+          leagueId,
+          leagueName: leagueInfo.name,
+          country: leagueInfo.country,
+          logo: `https://media.api-sports.io/football/leagues/${leagueId}.png`,
+          teams,
+        });
+      } catch (error) {
+        logger.warn({ leagueId, error }, 'Failed to fetch teams for league');
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Get fixture odds
+   */
+  async getFixtureOdds(fixtureId: number): Promise<Odds | null> {
+    try {
+      const odds = await this.get<Odds>('/odds', {
+        fixture: fixtureId.toString(),
+      });
+      return odds[0] || null;
+    } catch (error) {
+      logger.warn({ fixtureId, error }, 'Failed to fetch fixture odds');
+      return null;
+    }
+  }
+
+  /**
+   * Get team season statistics (form, goals, etc.)
+   */
+  async getTeamSeasonStatistics(teamId: number, leagueId: number, season: number = 2024): Promise<TeamStats | null> {
+    try {
+      const stats = await this.get<TeamStats>('/teams/statistics', {
+        team: teamId.toString(),
+        league: leagueId.toString(),
+        season: season.toString(),
+      });
+      return stats[0] || null;
+    } catch (error) {
+      logger.warn({ teamId, leagueId, error }, 'Failed to fetch team statistics');
+      return null;
+    }
+  }
+
+  /**
+   * Get standings for a specific league
+   */
+  async getLeagueStandings(leagueId: number, season: number = 2024): Promise<any> {
+    try {
+      const standings = await this.get<any>('/standings', {
+        league: leagueId.toString(),
+        season: season.toString(),
+      });
+      return standings[0] || null;
+    } catch (error) {
+      logger.warn({ leagueId, error }, 'Failed to fetch league standings');
+      return null;
+    }
+  }
+
+  /**
+   * Get detailed fixture with lineups, events, statistics
+   */
+  async getFixtureDetails(fixtureId: number): Promise<{
+    fixture: Fixture | null;
+    statistics: Statistics[];
+    events: any[];
+    lineups: any[];
+  }> {
+    try {
+      const [fixture, statistics] = await Promise.all([
+        this.getFixture(fixtureId),
+        this.getFixtureStatistics(fixtureId),
+      ]);
+
+      // Get events and lineups
+      const events = await this.get<any>('/fixtures/events', { fixture: fixtureId.toString() });
+      const lineups = await this.get<any>('/fixtures/lineups', { fixture: fixtureId.toString() });
+
+      return {
+        fixture,
+        statistics,
+        events,
+        lineups,
+      };
+    } catch (error) {
+      logger.error({ fixtureId, error }, 'Failed to fetch fixture details');
+      return {
+        fixture: null,
+        statistics: [],
+        events: [],
+        lineups: [],
+      };
     }
   }
 }

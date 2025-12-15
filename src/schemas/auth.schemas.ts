@@ -3,6 +3,11 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email format'),
+    username: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(30, 'Username must be at most 30 characters')
+      .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
     surname: z
@@ -14,8 +19,14 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email format'),
+    identifier: z.string().min(1, 'Email or username is required'),
     password: z.string().min(1, 'Password is required'),
+  }),
+});
+
+export const resendVerificationSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email format'),
   }),
 });
 
@@ -71,3 +82,4 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>['body'];
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>['body'];
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>['query'];
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>['body'];
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>['body'];

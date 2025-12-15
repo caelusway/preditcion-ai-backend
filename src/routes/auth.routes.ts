@@ -10,6 +10,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   verifyEmailSchema,
+  resendVerificationSchema,
 } from '../schemas/auth.schemas';
 
 const router = Router();
@@ -246,5 +247,39 @@ router.post(
  *         description: Invalid or expired token
  */
 router.get('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
+
+/**
+ * @swagger
+ * /auth/resend-verification:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Resend email verification
+ *     description: Resend verification email to unverified users. Rate limited to 1 request per 2 minutes.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Verification email sent if account exists and is unverified
+ *       400:
+ *         description: Email already verified
+ *       429:
+ *         description: Rate limit exceeded
+ */
+router.post(
+  '/resend-verification',
+  validate(resendVerificationSchema),
+  authController.resendVerification
+);
 
 export default router;

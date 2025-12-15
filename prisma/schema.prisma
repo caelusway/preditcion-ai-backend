@@ -11,21 +11,26 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String
-  name          String?
-  surname       String?
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(uuid())
+  email          String   @unique
+  username       String   @unique
+  passwordHash   String
+  name           String?
+  surname        String?
+  emailVerified  Boolean  @default(false)
+  selectedTeamId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
+  selectedTeam            Team?                    @relation("UserSelectedTeam", fields: [selectedTeamId], references: [id], onDelete: SetNull)
   refreshTokens           RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   predictions             Prediction[]
   savedMatches            SavedMatch[]
   userStats               UserStats?
+  favoriteLeagues         FavoriteLeague[]
+  coupons                 Coupon[]
 
   @@map("users")
 }
@@ -82,11 +87,12 @@ model Team {
   country   String?
   league    String?
 
-  homeMatches Match[] @relation("HomeTeam")
-  awayMatches Match[] @relation("AwayTeam")
-  standings   Standing[]
-  players     PlayerStats[]
-  savedMatches SavedMatch[]
+  homeMatches   Match[]       @relation("HomeTeam")
+  awayMatches   Match[]       @relation("AwayTeam")
+  standings     Standing[]
+  players       PlayerStats[]
+  savedMatches  SavedMatch[]
+  usersSelected User[]        @relation("UserSelectedTeam")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -110,11 +116,12 @@ model Match {
   round           String?
   externalData    Json?     // Store complete API response for reference
 
-  homeTeam        Team      @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam        Team      @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  predictions     Prediction[]
-  statistics      MatchStatistics?
-  savedBy         SavedMatch[]
+  homeTeam         Team              @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam         Team              @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  predictions      Prediction[]
+  statistics       MatchStatistics?
+  savedBy          SavedMatch[]
+  couponSelections CouponSelection[]
 
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -361,4 +368,69 @@ model UserStats {
   updatedAt             DateTime @updatedAt
 
   @@map("user_stats")
+}
+
+model FavoriteLeague {
+  id         String   @id @default(uuid())
+  userId     String
+  leagueId   Int      // API-Football league ID
+  leagueName String
+  country    String
+  logoUrl    String?
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, leagueId])
+  @@index([userId])
+  @@map("favorite_leagues")
+}
+
+model Coupon {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String?
+  status    String   @default("active") // active, settled, cancelled
+  totalOdds Float?
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  selections CouponSelection[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("coupons")
+}
+
+model CouponSelection {
+  id             String   @id @default(uuid())
+  couponId       String
+  matchId        String?
+  matchApiId     String   // API-Football fixture ID
+
+  // Match info snapshot
+  homeTeamName   String
+  awayTeamName   String
+  kickoffTime    DateTime
+  league         String
+
+  // Prediction
+  predictionType String   // "1x2", "btts", "over_under", "double_chance"
+  prediction     String   // "1", "X", "2", "Yes", "No", "Over 2.5", etc.
+  odds           Float
+
+  // Result
+  result         String?  // "won", "lost", "void", null (pending)
+
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  match          Match?   @relation(fields: [matchId], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime @default(now())
+
+  @@index([couponId])
+  @@index([matchId])
+  @@map("coupon_selections")
 }

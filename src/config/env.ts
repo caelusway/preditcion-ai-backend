@@ -30,6 +30,12 @@ const envSchema = z.object({
   RAPIDAPI_KEY: z.string().optional(),
   FOOTBALL_DATA_SOURCE: z.enum(['dummy', 'api']).default('dummy'),
 
+  // OpenAI for AI Analysis
+  OPENAI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().default('gpt-4o-mini'),
+  ENABLE_AI_ANALYSIS: z.string().default('true').transform((v) => v === 'true'),
+  PREDICTION_CACHE_TTL: z.string().default('1800').transform(Number), // 30 minutes
+
   AUTH_RATE_LIMIT: z.string().default('50').transform(Number),
   GENERAL_RATE_LIMIT: z.string().default('300').transform(Number),
 });
