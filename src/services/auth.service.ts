@@ -546,6 +546,45 @@ export class AuthService {
       createdAt: user.createdAt.toISOString(),
     };
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    // Get user
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new AppError(404, 'User not found');
+    }
+
+    // Verify current password
+    const isValid = await verifyPassword(user.passwordHash, currentPassword);
+    if (!isValid) {
+      throw new AppError(401, 'Current password is incorrect');
+    }
+
+    // Ensure new password is different from current
+    const isSamePassword = await verifyPassword(user.passwordHash, newPassword);
+    if (isSamePassword) {
+      throw new AppError(400, 'New password must be different from current password');
+    }
+
+    // Hash new password
+    const passwordHash = await hashPassword(newPassword);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    // Revoke all refresh tokens for security (force re-login on other devices)
+    await prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { revoked: true },
+    });
+
+    logger.info({ userId }, 'Password changed successfully');
+
+    return { message: 'Password changed successfully' };
+  }
 }
 
 export const authService = new AuthService();

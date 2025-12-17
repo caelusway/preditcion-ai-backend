@@ -74,6 +74,13 @@ export const updateProfileSchema = z.object({
   }),
 });
 
+export const changePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  }),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>['body'];
@@ -83,3 +90,4 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>['body'];
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>['query'];
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>['body'];
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>['body'];
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>['body'];

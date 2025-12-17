@@ -11,6 +11,7 @@ import {
   resetPasswordSchema,
   verifyEmailSchema,
   resendVerificationSchema,
+  changePasswordSchema,
 } from '../schemas/auth.schemas';
 
 const router = Router();
@@ -343,6 +344,60 @@ router.post(
   '/resend-verification',
   validate(resendVerificationSchema),
   authController.resendVerification
+);
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Change user password
+ *     description: Change the password for the authenticated user. Requires the current password for verification.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: The user's current password
+ *                 example: "OldPassword123!"
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *                 description: The new password (must be at least 8 characters)
+ *                 example: "NewSecurePass456!"
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Password changed successfully"
+ *       400:
+ *         description: New password must be different from current password
+ *       401:
+ *         description: Current password is incorrect or unauthorized
+ */
+router.post(
+  '/change-password',
+  requireAuth,
+  validate(changePasswordSchema),
+  authController.changePassword
 );
 
 export default router;

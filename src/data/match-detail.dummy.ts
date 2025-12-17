@@ -30,8 +30,8 @@ export interface FormStatistics {
 export interface RecentMatch {
   date: string;
   result: 'W' | 'L' | 'D';
-  homeTeam: { name: string };
-  awayTeam: { name: string };
+  homeTeam: { name: string; logoUrl?: string };
+  awayTeam: { name: string; logoUrl?: string };
   homeScore: number;
   awayScore: number;
 }
@@ -39,7 +39,7 @@ export interface RecentMatch {
 // Standing Entry
 export interface StandingEntry {
   position: number;
-  team: { name: string };
+  team: { name: string; logoUrl?: string };
   matches: number;
   goals: string;
   points: number;
@@ -138,53 +138,37 @@ export const awayTeamRecentMatches: RecentMatch[] = [
   { date: '31 Aug', result: 'W', homeTeam: { name: 'Okzhetpes.' }, awayTeam: { name: 'Kairat.' }, homeScore: 0, awayScore: 1 },
 ];
 
-// League standings
+// League standings (with team logos)
 export const standings: StandingEntry[] = [
-  { position: 1, team: { name: 'Bayern Münche' }, matches: 4, goals: '14-3', points: 12 },
-  { position: 2, team: { name: 'Arsenal' }, matches: 4, goals: '11-0', points: 12 },
-  { position: 3, team: { name: 'Inter' }, matches: 4, goals: '11-1', points: 12 },
-  { position: 4, team: { name: 'Manchester Cit' }, matches: 4, goals: '10-3', points: 10 },
-  { position: 5, team: { name: 'Paris Saint Ge' }, matches: 4, goals: '14-5', points: 9 },
-  { position: 6, team: { name: 'Leverkusen' }, matches: 4, goals: '9-2', points: 9 },
-  { position: 7, team: { name: 'Real Madrid' }, matches: 4, goals: '8-2', points: 9 },
-  { position: 8, team: { name: 'Liverpool' }, matches: 4, goals: '9-4', points: 9 },
-  { position: 9, team: { name: 'Galatasaray' }, matches: 4, goals: '8-6', points: 9 },
-  { position: 10, team: { name: 'Tottenham' }, matches: 4, goals: '7-2', points: 8 },
-  { position: 11, team: { name: 'Barcelona' }, matches: 4, goals: '12-7', points: 7 },
-  { position: 12, team: { name: 'Chelsea' }, matches: 4, goals: '9-6', points: 7 },
-  { position: 13, team: { name: 'Sporting CP' }, matches: 4, goals: '8-5', points: 7 },
-  { position: 14, team: { name: 'Borussia Dortm' }, matches: 4, goals: '13-11', points: 7 },
-  { position: 15, team: { name: 'Qarabag' }, matches: 4, goals: '8-7', points: 7 },
-  { position: 16, team: { name: 'Atalanta' }, matches: 4, goals: '3-5', points: 7 },
-  { position: 17, team: { name: 'Atletico Madri' }, matches: 4, goals: '10-9', points: 6 },
-  { position: 18, team: { name: 'PSV Eindhoven' }, matches: 4, goals: '9-7', points: 5 },
-  { position: 19, team: { name: 'Monaco' }, matches: 4, goals: '4-6', points: 5 },
-  { position: 20, team: { name: 'Pafos' }, matches: 4, goals: '2-5', points: 5 },
-  { position: 21, team: { name: 'Bayer Leverkus' }, matches: 4, goals: '6-10', points: 5 },
-  { position: 22, team: { name: 'Club Brugge KV' }, matches: 4, goals: '8-10', points: 4 },
-  { position: 23, team: { name: 'Eintracht Fran' }, matches: 4, goals: '7-11', points: 4 },
-  { position: 24, team: { name: 'Napoli' }, matches: 4, goals: '4-9', points: 4 },
-  { position: 25, team: { name: 'Marseille' }, matches: 4, goals: '6-5', points: 3 },
-  { position: 26, team: { name: 'Juventus' }, matches: 4, goals: '7-8', points: 3 },
-  { position: 27, team: { name: 'Athletic Club' }, matches: 4, goals: '4-9', points: 3 },
-  { position: 28, team: { name: 'Union St. Gill' }, matches: 4, goals: '4-12', points: 3 },
-  { position: 29, team: { name: 'Bodo/Glimt' }, matches: 4, goals: '5-8', points: 2 },
-  { position: 30, team: { name: 'Slavia Praha' }, matches: 4, goals: '2-8', points: 2 },
-  { position: 31, team: { name: 'Olympiakos Pir' }, matches: 4, goals: '2-9', points: 2 },
-  { position: 32, team: { name: 'Villarreal' }, matches: 4, goals: '2-6', points: 1 },
-  { position: 33, team: { name: 'FC Copenhagen' }, matches: 4, goals: '4-12', points: 1, isHighlighted: true },
-  { position: 34, team: { name: 'Kairat Almaty' }, matches: 4, goals: '2-11', points: 1, isHighlighted: true },
-  { position: 35, team: { name: 'Benfica' }, matches: 4, goals: '2-8', points: 0 },
-  { position: 36, team: { name: 'Ajax' }, matches: 4, goals: '1-14', points: 0 },
+  { position: 1, team: { name: 'Bayern München', logoUrl: 'https://media.api-sports.io/football/teams/157.png' }, matches: 4, goals: '14-3', points: 12 },
+  { position: 2, team: { name: 'Arsenal', logoUrl: 'https://media.api-sports.io/football/teams/42.png' }, matches: 4, goals: '11-0', points: 12 },
+  { position: 3, team: { name: 'Inter', logoUrl: 'https://media.api-sports.io/football/teams/505.png' }, matches: 4, goals: '11-1', points: 12 },
+  { position: 4, team: { name: 'Manchester City', logoUrl: 'https://media.api-sports.io/football/teams/50.png' }, matches: 4, goals: '10-3', points: 10 },
+  { position: 5, team: { name: 'Paris Saint Germain', logoUrl: 'https://media.api-sports.io/football/teams/85.png' }, matches: 4, goals: '14-5', points: 9 },
+  { position: 6, team: { name: 'Leverkusen', logoUrl: 'https://media.api-sports.io/football/teams/168.png' }, matches: 4, goals: '9-2', points: 9 },
+  { position: 7, team: { name: 'Real Madrid', logoUrl: 'https://media.api-sports.io/football/teams/541.png' }, matches: 4, goals: '8-2', points: 9 },
+  { position: 8, team: { name: 'Liverpool', logoUrl: 'https://media.api-sports.io/football/teams/40.png' }, matches: 4, goals: '9-4', points: 9 },
+  { position: 9, team: { name: 'Galatasaray', logoUrl: 'https://media.api-sports.io/football/teams/645.png' }, matches: 4, goals: '8-6', points: 9 },
+  { position: 10, team: { name: 'Tottenham', logoUrl: 'https://media.api-sports.io/football/teams/47.png' }, matches: 4, goals: '7-2', points: 8 },
+  { position: 11, team: { name: 'Barcelona', logoUrl: 'https://media.api-sports.io/football/teams/529.png' }, matches: 4, goals: '12-7', points: 7 },
+  { position: 12, team: { name: 'Chelsea', logoUrl: 'https://media.api-sports.io/football/teams/49.png' }, matches: 4, goals: '9-6', points: 7 },
+  { position: 13, team: { name: 'Sporting CP', logoUrl: 'https://media.api-sports.io/football/teams/228.png' }, matches: 4, goals: '8-5', points: 7 },
+  { position: 14, team: { name: 'Borussia Dortmund', logoUrl: 'https://media.api-sports.io/football/teams/165.png' }, matches: 4, goals: '13-11', points: 7 },
+  { position: 15, team: { name: 'Qarabag', logoUrl: 'https://media.api-sports.io/football/teams/556.png' }, matches: 4, goals: '8-7', points: 7 },
+  { position: 16, team: { name: 'Atalanta', logoUrl: 'https://media.api-sports.io/football/teams/499.png' }, matches: 4, goals: '3-5', points: 7 },
+  { position: 17, team: { name: 'Atletico Madrid', logoUrl: 'https://media.api-sports.io/football/teams/530.png' }, matches: 4, goals: '10-9', points: 6 },
+  { position: 18, team: { name: 'PSV Eindhoven', logoUrl: 'https://media.api-sports.io/football/teams/197.png' }, matches: 4, goals: '9-7', points: 5 },
+  { position: 19, team: { name: 'Monaco', logoUrl: 'https://media.api-sports.io/football/teams/91.png' }, matches: 4, goals: '4-6', points: 5 },
+  { position: 20, team: { name: 'Pafos', logoUrl: 'https://media.api-sports.io/football/teams/4498.png' }, matches: 4, goals: '2-5', points: 5 },
 ];
 
-// AI Predictions for match detail
+// AI Predictions for match detail (confidence is out of 100)
 export const aiPredictions: AIPrediction[] = [
-  { label: 'Best Tip', prediction: 'U3.5', odds: 1.63, confidence: 3, oddsDirection: 'none' },
-  { label: '1x2 Tip', prediction: '2', odds: 9.5, confidence: 1, oddsDirection: 'down' },
-  { label: 'Total Goals', prediction: 'Under 3.5', odds: 1.63, confidence: 3, oddsDirection: 'none' },
-  { label: 'Both Teams To Score', prediction: 'Yes', odds: 1.86, confidence: 1, oddsDirection: 'up' },
-  { label: 'Bet Builder Tip', prediction: 'X2&U5.5', odds: 3.70, confidence: 1, oddsDirection: 'none' },
+  { label: 'Best Tip', prediction: 'U3.5', odds: 1.63, confidence: 75, oddsDirection: 'none' },
+  { label: '1x2 Tip', prediction: '2', odds: 9.5, confidence: 45, oddsDirection: 'down' },
+  { label: 'Total Goals', prediction: 'Under 3.5', odds: 1.63, confidence: 72, oddsDirection: 'none' },
+  { label: 'Both Teams To Score', prediction: 'Yes', odds: 1.86, confidence: 58, oddsDirection: 'up' },
+  { label: 'Bet Builder Tip', prediction: 'X2&U5.5', odds: 3.70, confidence: 42, oddsDirection: 'none' },
 ];
 
 // Match header odds

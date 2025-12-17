@@ -20,57 +20,78 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   name:
- *                     type: string
- *                   status:
- *                     type: string
- *                     enum: [active, settled, cancelled]
- *                   totalOdds:
- *                     type: number
- *                     description: Combined odds of all selections
- *                     example: 5.67
- *                   selections:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         id:
- *                           type: string
- *                         matchApiId:
- *                           type: string
- *                         homeTeamName:
- *                           type: string
- *                         awayTeamName:
- *                           type: string
- *                         kickoffTime:
- *                           type: string
- *                           format: date-time
- *                         league:
- *                           type: string
- *                         predictionType:
- *                           type: string
- *                           enum: [1x2, btts, over_under, double_chance]
- *                           example: btts
- *                         prediction:
- *                           type: string
- *                           example: "Yes"
- *                         odds:
- *                           type: number
- *                           example: 1.65
- *                         result:
- *                           type: string
- *                           enum: [pending, won, lost]
- *                   createdAt:
- *                     type: string
- *                     format: date-time
+ *               type: object
+ *               properties:
+ *                 coupons:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
+ *
+ * components:
+ *   schemas:
+ *     Coupon:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *         name:
+ *           type: string
+ *           example: "Weekend Coupon"
+ *         status:
+ *           type: string
+ *           enum: [active, settled, cancelled]
+ *           example: active
+ *         totalOdds:
+ *           type: number
+ *           description: Combined odds of all selections
+ *           example: 5.67
+ *         selections:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/CouponSelection'
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *     CouponSelection:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "550e8400-e29b-41d4-a716-446655440001"
+ *         matchApiId:
+ *           type: string
+ *           example: "1234567"
+ *         homeTeamName:
+ *           type: string
+ *           example: "Manchester United"
+ *         awayTeamName:
+ *           type: string
+ *           example: "Liverpool"
+ *         kickoffTime:
+ *           type: string
+ *           format: date-time
+ *         league:
+ *           type: string
+ *           example: "Premier League"
+ *         predictionType:
+ *           type: string
+ *           enum: [1x2, btts, over_under, double_chance]
+ *           example: btts
+ *         prediction:
+ *           type: string
+ *           description: "The prediction value (1, X, 2, Yes, No, Over 2.5, etc.)"
+ *           example: "Yes"
+ *         odds:
+ *           type: number
+ *           example: 1.65
+ *         result:
+ *           type: string
+ *           enum: [pending, won, lost]
+ *           nullable: true
+ *           example: pending
  */
 router.get('/', requireAuth, couponController.getCoupons);
 
@@ -81,11 +102,21 @@ router.get('/', requireAuth, couponController.getCoupons);
  *     tags:
  *       - Coupons
  *     summary: Get active coupon
+ *     description: Returns the user's currently active coupon or null if none exists
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Active coupon or null
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupon:
+ *                   oneOf:
+ *                     - $ref: '#/components/schemas/Coupon'
+ *                     - type: 'null'
  *       401:
  *         description: Unauthorized
  */
@@ -98,11 +129,21 @@ router.get('/active', requireAuth, couponController.getActiveCoupon);
  *     tags:
  *       - Coupons
  *     summary: Get past coupons (settled or cancelled)
+ *     description: Returns all coupons that are no longer active
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of past coupons
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupons:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
  */
@@ -124,6 +165,7 @@ router.get('/past', requireAuth, couponController.getPastCoupons);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Coupon ID (UUID)
  *     responses:
  *       200:
  *         description: Coupon details with selections and odds
@@ -132,39 +174,8 @@ router.get('/past', requireAuth, couponController.getPastCoupons);
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: string
- *                 name:
- *                   type: string
- *                 status:
- *                   type: string
- *                   enum: [active, settled, cancelled]
- *                 totalOdds:
- *                   type: number
- *                   example: 5.67
- *                 selections:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       homeTeamName:
- *                         type: string
- *                       awayTeamName:
- *                         type: string
- *                       predictionType:
- *                         type: string
- *                         example: "1x2"
- *                       prediction:
- *                         type: string
- *                         example: "1"
- *                       odds:
- *                         type: number
- *                         example: 1.85
- *                       result:
- *                         type: string
- *                         enum: [pending, won, lost]
+ *                 coupon:
+ *                   $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
  *       404:
@@ -179,6 +190,7 @@ router.get('/:id', requireAuth, couponController.getCouponById);
  *     tags:
  *       - Coupons
  *     summary: Create a new coupon
+ *     description: Creates a new empty coupon for the user
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -190,9 +202,17 @@ router.get('/:id', requireAuth, couponController.getCouponById);
  *               name:
  *                 type: string
  *                 description: Optional coupon name
+ *                 example: "Weekend Bets"
  *     responses:
  *       201:
- *         description: Coupon created
+ *         description: Coupon created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupon:
+ *                   $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
  */
@@ -230,6 +250,7 @@ router.delete('/:id', requireAuth, couponController.deleteCoupon);
  *     tags:
  *       - Coupons
  *     summary: Add a match selection to coupon
+ *     description: Add a prediction for a match to an existing coupon
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -238,6 +259,7 @@ router.delete('/:id', requireAuth, couponController.deleteCoupon);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Coupon ID (UUID)
  *     requestBody:
  *       required: true
  *       content:
@@ -256,26 +278,42 @@ router.delete('/:id', requireAuth, couponController.deleteCoupon);
  *             properties:
  *               matchApiId:
  *                 type: string
+ *                 description: API-Football fixture ID
+ *                 example: "1234567"
  *               homeTeamName:
  *                 type: string
+ *                 example: "Manchester United"
  *               awayTeamName:
  *                 type: string
+ *                 example: "Liverpool"
  *               kickoffTime:
  *                 type: string
  *                 format: date-time
+ *                 example: "2024-12-20T15:00:00Z"
  *               league:
  *                 type: string
+ *                 example: "Premier League"
  *               predictionType:
  *                 type: string
  *                 enum: [1x2, btts, over_under, double_chance]
+ *                 example: "1x2"
  *               prediction:
  *                 type: string
- *                 description: "1, X, 2, Yes, No, Over 2.5, etc."
+ *                 description: "1 (home win), X (draw), 2 (away win), Yes/No (BTTS), Over 2.5/Under 2.5, etc."
+ *                 example: "1"
  *               odds:
  *                 type: number
+ *                 example: 1.85
  *     responses:
  *       201:
- *         description: Selection added
+ *         description: Selection added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupon:
+ *                   $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
  *       404:
@@ -292,6 +330,7 @@ router.post('/:id/selections', requireAuth, couponController.addSelection);
  *     tags:
  *       - Coupons
  *     summary: Remove a selection from coupon
+ *     description: Remove a match prediction from an existing coupon
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -300,14 +339,23 @@ router.post('/:id/selections', requireAuth, couponController.addSelection);
  *         required: true
  *         schema:
  *           type: string
+ *         description: Coupon ID (UUID)
  *       - in: path
  *         name: selectionId
  *         required: true
  *         schema:
  *           type: string
+ *         description: Selection ID (UUID)
  *     responses:
  *       200:
- *         description: Selection removed
+ *         description: Selection removed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupon:
+ *                   $ref: '#/components/schemas/Coupon'
  *       401:
  *         description: Unauthorized
  *       404:

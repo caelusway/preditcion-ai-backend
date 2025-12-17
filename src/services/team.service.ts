@@ -44,7 +44,22 @@ export class TeamService {
           'Ligue 1': { id: LEAGUE_IDS.LIGUE_1, country: 'France', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.LIGUE_1}.png` },
         };
 
+        // Track teams by name within each league to avoid duplicates
+        // Prefer teams with apiId over teams without
+        const teamByNameAndLeague = new Map<string, typeof dbTeams[0]>();
+
         for (const team of dbTeams) {
+          const key = `${team.league}:${team.name}`;
+          const existing = teamByNameAndLeague.get(key);
+
+          // If no existing team, or current team has apiId and existing doesn't, use current
+          if (!existing || (team.apiId && !existing.apiId)) {
+            teamByNameAndLeague.set(key, team);
+          }
+        }
+
+        // Now build the league map from deduplicated teams
+        for (const team of teamByNameAndLeague.values()) {
           const leagueName = team.league || 'Unknown';
           const info = leagueInfo[leagueName];
 
@@ -64,6 +79,11 @@ export class TeamService {
             name: team.name,
             logoUrl: team.logoUrl || '',
           });
+        }
+
+        // Sort teams by name within each league
+        for (const league of leagueMap.values()) {
+          league.teams.sort((a, b) => a.name.localeCompare(b.name));
         }
 
         return { leagues: Array.from(leagueMap.values()) };

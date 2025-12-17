@@ -1,78 +1,105 @@
 #!/bin/bash
 
-# Quick API Test Script
-BASE_URL="http://localhost:3001"
+echo "=========================================="
+echo "TEST 1: Duplicate Teams in Premier League"
+echo "=========================================="
 
-echo "🧪 Testing Football Prediction API"
-echo "===================================="
+RESPONSE=$(curl -s http://localhost:3001/teams/selectable)
+EVERTON_COUNT=$(echo "$RESPONSE" | grep -o '"name":"Everton"' | wc -l | tr -d ' ')
+
+echo "Everton entries found: $EVERTON_COUNT"
+if [ "$EVERTON_COUNT" -eq 1 ]; then
+  echo "PASS: No duplicate Everton (only 1 entry)"
+else
+  echo "FAIL: Found $EVERTON_COUNT Everton entries"
+fi
+
 echo ""
+echo "=========================================="
+echo "TEST 2: AI Prediction Confidence (100 scale)"
+echo "=========================================="
 
-# Test 1: Health Check
-echo "1️⃣ Testing Health Endpoint..."
-curl -s "$BASE_URL/health" | jq '.'
+MATCH_RESPONSE=$(curl -s "http://localhost:3001/matches/1")
+CONFIDENCE_VALUES=$(echo "$MATCH_RESPONSE" | grep -o '"confidence":[0-9]*' | head -5)
+
+echo "Confidence values found:"
+echo "$CONFIDENCE_VALUES"
+
+HAS_HIGH_CONFIDENCE=$(echo "$MATCH_RESPONSE" | grep -o '"confidence":[0-9]*' | grep -E '"confidence":[1-9][0-9]' | head -1)
+if [ -n "$HAS_HIGH_CONFIDENCE" ]; then
+  echo "PASS: Confidence is on 100 scale"
+else
+  echo "FAIL: Confidence appears to be on 10 scale"
+fi
+
 echo ""
+echo "=========================================="
+echo "TEST 3: Standings Team Logos"
+echo "=========================================="
 
-# Test 2: Live Matches
-echo "2️⃣ Testing Live Matches..."
-curl -s "$BASE_URL/matches?status=live" | jq '{count: .data | length, matches: [.data[] | {id, home: .homeTeam.name, away: .awayTeam.name, status, score: "\(.homeScore)-\(.awayScore)"}]}'
+if echo "$MATCH_RESPONSE" | grep -q '"standings".*"logoUrl"'; then
+  echo "PASS: Standings include team logos"
+  echo "Sample:"
+  echo "$MATCH_RESPONSE" | grep -o '"team":{"name":"[^"]*","logoUrl":"[^"]*"}' | head -3
+else
+  echo "FAIL: No logoUrl in standings"
+fi
+
 echo ""
+echo "=========================================="
+echo "TEST 4: Swagger Docs Available"
+echo "=========================================="
 
-# Test 3: Upcoming Matches
-echo "3️⃣ Testing Upcoming Matches..."
-curl -s "$BASE_URL/matches?status=upcoming" | jq '{count: .data | length}'
+SWAGGER_CHECK=$(curl -s http://localhost:3001/docs/ | head -c 100)
+if echo "$SWAGGER_CHECK" | grep -qi 'html\|swagger'; then
+  echo "PASS: Swagger docs accessible"
+else
+  echo "CHECK: $SWAGGER_CHECK"
+fi
+
 echo ""
+echo "=========================================="
+echo "TEST 5: Change Password API"
+echo "=========================================="
 
-# Test 4: Finished Matches
-echo "4️⃣ Testing Finished Matches..."
-curl -s "$BASE_URL/matches?status=finished" | jq '{count: .data | length}'
-echo ""
+# Register test user
+REG=$(curl -s -X POST http://localhost:3001/auth/register -H "Content-Type: application/json" -d '{"email":"testpwd2@test.com","username":"testpwd2","password":"OldPass123","name":"Test","surname":"User"}')
+echo "Registered: $(echo $REG | grep -o '"id":"[^"]*"' | head -1)"
 
-# Test 5: Register & Login
-echo "5️⃣ Testing Auth Flow..."
-RANDOM_EMAIL="test$(date +%s)@test.com"
-echo "Registering user: $RANDOM_EMAIL"
-REG_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/register" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$RANDOM_EMAIL\",\"password\":\"Test1234\",\"name\":\"Test\",\"surname\":\"User\"}")
-echo "$REG_RESPONSE" | jq '{userId: .user.id, email: .user.email}'
-
-# Verify email in DB
-npx prisma db execute --stdin <<< "UPDATE users SET \"emailVerified\" = true WHERE email = '$RANDOM_EMAIL';" > /dev/null 2>&1
-echo "Email verified"
+# Verify email
+npx prisma db execute --stdin <<< "UPDATE users SET \"emailVerified\" = true WHERE email = 'testpwd2@test.com';" 2>/dev/null
 
 # Login
-echo "Logging in..."
-LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/login" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$RANDOM_EMAIL\",\"password\":\"Test1234\"}")
-TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.accessToken')
-echo "Token received: ${TOKEN:0:20}..."
-echo ""
+LOGIN=$(curl -s -X POST http://localhost:3001/auth/login -H "Content-Type: application/json" -d '{"identifier":"testpwd2@test.com","password":"OldPass123"}')
+TOKEN=$(echo "$LOGIN" | grep -o '"accessToken":"[^"]*"' | sed 's/"accessToken":"//;s/"//')
 
-# Test 6: Stats API
-echo "6️⃣ Testing Stats API..."
-curl -s -X GET "$BASE_URL/stats" \
-  -H "Authorization: Bearer $TOKEN" | jq '.'
-echo ""
+if [ -n "$TOKEN" ]; then
+  echo "Login successful"
+  
+  # Test wrong password
+  WRONG=$(curl -s -X POST http://localhost:3001/auth/change-password -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"currentPassword":"WrongPass","newPassword":"NewPass456"}')
+  if echo "$WRONG" | grep -q "incorrect"; then
+    echo "PASS: Wrong password rejected"
+  fi
+  
+  # Test correct password
+  CORRECT=$(curl -s -X POST http://localhost:3001/auth/change-password -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -d '{"currentPassword":"OldPass123","newPassword":"NewPass456"}')
+  if echo "$CORRECT" | grep -q "success"; then
+    echo "PASS: Password changed"
+  fi
+  
+  # Verify new password works
+  NEWLOGIN=$(curl -s -X POST http://localhost:3001/auth/login -H "Content-Type: application/json" -d '{"identifier":"testpwd2@test.com","password":"NewPass456"}')
+  if echo "$NEWLOGIN" | grep -q "accessToken"; then
+    echo "PASS: New password works"
+  fi
+fi
 
-# Test 7: Save Match
-echo "7️⃣ Testing Save Match..."
-curl -s -X POST "$BASE_URL/saved-matches" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
-  -d '{"matchId":"match-live-1"}' | jq '.'
-echo ""
+# Cleanup
+npx prisma db execute --stdin <<< "DELETE FROM users WHERE email = 'testpwd2@test.com';" 2>/dev/null
+echo "Cleanup done"
 
-# Test 8: Get Saved Matches
-echo "8️⃣ Testing Get Saved Matches..."
-curl -s -X GET "$BASE_URL/saved-matches" \
-  -H "Authorization: Bearer $TOKEN" | jq 'length'
 echo ""
-
-# Test 9: Unsave Match
-echo "9️⃣ Testing Unsave Match..."
-curl -s -X DELETE "$BASE_URL/saved-matches/match-live-1" \
-  -H "Authorization: Bearer $TOKEN" | jq '.'
-echo ""
-
-echo "✅ All tests completed!"
+echo "=========================================="
+echo "ALL TESTS COMPLETED"
+echo "=========================================="

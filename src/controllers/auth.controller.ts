@@ -11,6 +11,7 @@ import {
   VerifyEmailInput,
   UpdateProfileInput,
   ResendVerificationInput,
+  ChangePasswordInput,
 } from '../schemas/auth.schemas';
 
 // HTML page that redirects to mobile app
@@ -305,6 +306,21 @@ export class AuthController {
     try {
       const userId = req.user!.id;
       const result = await authService.updateProfile(userId, req.body);
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async changePassword(
+    req: Request<{}, {}, ChangePasswordInput>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const userId = req.user!.id;
+      const { currentPassword, newPassword } = req.body;
+      const result = await authService.changePassword(userId, currentPassword, newPassword);
       res.status(200).json(result);
     } catch (error) {
       next(error);

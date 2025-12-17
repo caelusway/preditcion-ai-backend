@@ -384,8 +384,8 @@ export class MatchesController {
               result: m.teams.home.id === homeTeamApiId
                 ? (m.teams.home.winner ? 'W' : m.teams.away.winner ? 'L' : 'D')
                 : (m.teams.away.winner ? 'W' : m.teams.home.winner ? 'L' : 'D'),
-              homeTeam: { name: m.teams.home.name },
-              awayTeam: { name: m.teams.away.name },
+              homeTeam: { name: m.teams.home.name, logoUrl: m.teams.home.logo },
+              awayTeam: { name: m.teams.away.name, logoUrl: m.teams.away.logo },
               homeScore: m.goals.home,
               awayScore: m.goals.away,
             }));
@@ -398,8 +398,8 @@ export class MatchesController {
               result: m.teams.away.id === awayTeamApiId
                 ? (m.teams.away.winner ? 'W' : m.teams.home.winner ? 'L' : 'D')
                 : (m.teams.home.winner ? 'W' : m.teams.away.winner ? 'L' : 'D'),
-              homeTeam: { name: m.teams.home.name },
-              awayTeam: { name: m.teams.away.name },
+              homeTeam: { name: m.teams.home.name, logoUrl: m.teams.home.logo },
+              awayTeam: { name: m.teams.away.name, logoUrl: m.teams.away.logo },
               homeScore: m.goals.home,
               awayScore: m.goals.away,
             }));
@@ -408,7 +408,22 @@ export class MatchesController {
           // Get league standings
           const externalData = match.externalData as any;
           if (externalData?.league?.id) {
-            leagueStandings = await footballAPIService.getLeagueStandings(externalData.league.id, 2024);
+            const rawStandings = await footballAPIService.getLeagueStandings(externalData.league.id, 2024);
+            // Transform API standings to include team logos
+            if (rawStandings?.league?.standings?.[0]) {
+              leagueStandings = rawStandings.league.standings[0].map((s: any) => ({
+                position: s.rank,
+                team: {
+                  name: s.team.name,
+                  logoUrl: s.team.logo,
+                },
+                matches: s.all?.played || 0,
+                goals: `${s.all?.goals?.for || 0}-${s.all?.goals?.against || 0}`,
+                points: s.points,
+                isHighlighted: s.team.id === parseInt(match.homeTeam.apiId || '0') ||
+                               s.team.id === parseInt(match.awayTeam.apiId || '0'),
+              }));
+            }
           }
         } catch (apiError) {
           logger.warn({ error: apiError, matchId: id }, 'Failed to fetch additional match data from API');
@@ -446,7 +461,7 @@ export class MatchesController {
         formStatistics,
         homeTeamRecentMatches: homeRecentMatches.length > 0 ? homeRecentMatches : homeTeamRecentMatches,
         awayTeamRecentMatches: awayRecentMatches.length > 0 ? awayRecentMatches : awayTeamRecentMatches,
-        standings: leagueStandings?.league?.standings?.[0] || standings,
+        standings: leagueStandings || standings,
         aiPredictions,
         matchHeaderOdds,
         marketValues,
