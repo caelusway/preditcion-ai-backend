@@ -8,7 +8,7 @@ interface CreateCouponInput {
 
 interface UpdateCouponInput {
   name?: string;
-  status?: 'active' | 'saved' | 'settled' | 'cancelled';
+  status?: 'active' | 'completed';
 }
 
 interface AddSelectionInput {
@@ -59,13 +59,13 @@ export class CouponService {
   }
 
   /**
-   * Get past coupons (settled or cancelled)
+   * Get past coupons (completed)
    */
   async getPastCoupons(userId: string) {
     return await prisma.coupon.findMany({
       where: {
         userId,
-        status: { in: ['settled', 'cancelled'] },
+        status: 'completed',
       },
       include: {
         selections: {
@@ -192,8 +192,8 @@ export class CouponService {
       throw new AppError(404, 'Coupon not found');
     }
 
-    if (coupon.status !== 'active') {
-      throw new AppError(400, 'Cannot add selections to a non-active coupon');
+    if (coupon.status === 'completed') {
+      throw new AppError(400, 'Cannot add selections to a completed coupon');
     }
 
     // Check if selection for this match already exists
@@ -218,8 +218,8 @@ export class CouponService {
         matchApiId: data.matchApiId,
         homeTeamName: data.homeTeamName,
         awayTeamName: data.awayTeamName,
-        homeTeamLogoUrl: data.homeTeamLogoUrl,
-        awayTeamLogoUrl: data.awayTeamLogoUrl,
+        homeTeamLogoUrl: data.homeTeamLogoUrl ?? null,
+        awayTeamLogoUrl: data.awayTeamLogoUrl ?? null,
         kickoffTime: new Date(data.kickoffTime),
         league: data.league,
         predictionType: data.predictionType,
@@ -259,8 +259,8 @@ export class CouponService {
       throw new AppError(404, 'Coupon not found');
     }
 
-    if (coupon.status !== 'active') {
-      throw new AppError(400, 'Cannot modify a non-active coupon');
+    if (coupon.status === 'completed') {
+      throw new AppError(400, 'Cannot modify a completed coupon');
     }
 
     const selection = coupon.selections.find(s => s.id === selectionId);
@@ -312,7 +312,7 @@ export class CouponService {
     // Update coupon status
     await prisma.coupon.update({
       where: { id: couponId },
-      data: { status: 'settled' },
+      data: { status: 'completed' },
     });
 
     return await this.getCouponById(userId, couponId);

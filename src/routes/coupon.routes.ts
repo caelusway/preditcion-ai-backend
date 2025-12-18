@@ -42,7 +42,7 @@ const router = Router();
  *           example: "Weekend Coupon"
  *         status:
  *           type: string
- *           enum: [active, settled, cancelled]
+ *           enum: [active, completed]
  *           example: active
  *         totalOdds:
  *           type: number
@@ -255,9 +255,9 @@ router.post('/', requireAuth, couponController.createCoupon);
  *                 example: "My Weekend Bet"
  *               status:
  *                 type: string
- *                 enum: [active, saved, settled, cancelled]
+ *                 enum: [active, completed]
  *                 description: Coupon status
- *                 example: "saved"
+ *                 example: "completed"
  *     responses:
  *       200:
  *         description: Coupon updated successfully
