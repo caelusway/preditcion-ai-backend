@@ -70,6 +70,14 @@ const router = Router();
  *         awayTeamName:
  *           type: string
  *           example: "Liverpool"
+ *         homeTeamLogoUrl:
+ *           type: string
+ *           nullable: true
+ *           example: "https://media.api-sports.io/football/teams/33.png"
+ *         awayTeamLogoUrl:
+ *           type: string
+ *           nullable: true
+ *           example: "https://media.api-sports.io/football/teams/40.png"
  *         kickoffTime:
  *           type: string
  *           format: date-time
@@ -221,6 +229,55 @@ router.post('/', requireAuth, couponController.createCoupon);
 /**
  * @swagger
  * /coupons/{id}:
+ *   put:
+ *     tags:
+ *       - Coupons
+ *     summary: Update/Save a coupon
+ *     description: Update coupon name or status (use status 'saved' to save the coupon)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Coupon ID (UUID)
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: New coupon name
+ *                 example: "My Weekend Bet"
+ *               status:
+ *                 type: string
+ *                 enum: [active, saved, settled, cancelled]
+ *                 description: Coupon status
+ *                 example: "saved"
+ *     responses:
+ *       200:
+ *         description: Coupon updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coupon:
+ *                   $ref: '#/components/schemas/Coupon'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Coupon not found
+ */
+router.put('/:id', requireAuth, couponController.updateCoupon);
+
+/**
+ * @swagger
+ * /coupons/{id}:
  *   delete:
  *     tags:
  *       - Coupons
@@ -286,6 +343,12 @@ router.delete('/:id', requireAuth, couponController.deleteCoupon);
  *               awayTeamName:
  *                 type: string
  *                 example: "Liverpool"
+ *               homeTeamLogoUrl:
+ *                 type: string
+ *                 example: "https://media.api-sports.io/football/teams/33.png"
+ *               awayTeamLogoUrl:
+ *                 type: string
+ *                 example: "https://media.api-sports.io/football/teams/40.png"
  *               kickoffTime:
  *                 type: string
  *                 format: date-time

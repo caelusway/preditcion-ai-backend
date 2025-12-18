@@ -6,10 +6,17 @@ interface CreateCouponInput {
   name?: string;
 }
 
+interface UpdateCouponInput {
+  name?: string;
+  status?: 'active' | 'saved' | 'settled' | 'cancelled';
+}
+
 interface AddSelectionInput {
   matchApiId: string;
   homeTeamName: string;
   awayTeamName: string;
+  homeTeamLogoUrl?: string;
+  awayTeamLogoUrl?: string;
   kickoffTime: string;
   league: string;
   predictionType: string;
@@ -136,6 +143,38 @@ export class CouponService {
   }
 
   /**
+   * Update/Save a coupon
+   */
+  async updateCoupon(userId: string, couponId: string, data: UpdateCouponInput) {
+    const coupon = await prisma.coupon.findFirst({
+      where: {
+        id: couponId,
+        userId,
+      },
+    });
+
+    if (!coupon) {
+      throw new AppError(404, 'Coupon not found');
+    }
+
+    const updatedCoupon = await prisma.coupon.update({
+      where: { id: couponId },
+      data: {
+        name: data.name !== undefined ? data.name : coupon.name,
+        status: data.status !== undefined ? data.status : coupon.status,
+      },
+      include: {
+        selections: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    logger.info({ userId, couponId, status: updatedCoupon.status }, 'Coupon updated');
+    return updatedCoupon;
+  }
+
+  /**
    * Add a selection (match prediction) to a coupon
    */
   async addSelection(userId: string, couponId: string, data: AddSelectionInput) {
@@ -179,6 +218,8 @@ export class CouponService {
         matchApiId: data.matchApiId,
         homeTeamName: data.homeTeamName,
         awayTeamName: data.awayTeamName,
+        homeTeamLogoUrl: data.homeTeamLogoUrl,
+        awayTeamLogoUrl: data.awayTeamLogoUrl,
         kickoffTime: new Date(data.kickoffTime),
         league: data.league,
         predictionType: data.predictionType,

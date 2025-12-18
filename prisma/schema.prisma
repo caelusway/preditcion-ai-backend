@@ -414,6 +414,8 @@ model CouponSelection {
   // Match info snapshot
   homeTeamName   String
   awayTeamName   String
+  homeTeamLogoUrl String?
+  awayTeamLogoUrl String?
   kickoffTime    DateTime
   league         String
 

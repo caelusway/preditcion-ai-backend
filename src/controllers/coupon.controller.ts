@@ -84,6 +84,21 @@ export class CouponController {
   }
 
   /**
+   * PUT /coupons/:id - Update/Save a coupon
+   */
+  async updateCoupon(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user!.id;
+      const { id } = req.params;
+      const { name, status } = req.body;
+      const coupon = await couponService.updateCoupon(userId, id, { name, status });
+      res.status(200).json({ coupon });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * POST /coupons/:id/selections - Add a selection to coupon
    */
   async addSelection(req: Request, res: Response, next: NextFunction) {
