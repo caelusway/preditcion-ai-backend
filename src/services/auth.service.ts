@@ -13,17 +13,33 @@ interface DeviceMetadata {
 }
 
 export class AuthService {
-  async register(email: string, username: string, password: string, name: string, surname: string) {
+  async register(email: string, password: string, username?: string) {
     // Check if email exists
     const existingEmail = await prisma.user.findUnique({ where: { email } });
     if (existingEmail) {
       throw new AppError(409, 'Email already exists');
     }
 
+    // Generate username from email if not provided
+    let finalUsername = username;
+    if (!finalUsername) {
+      // Extract username from email (part before @)
+      const emailPrefix = email.split('@')[0];
+      // Add random suffix to ensure uniqueness
+      const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      finalUsername = `${emailPrefix}_${randomSuffix}`;
+    }
+
     // Check if username exists
-    const existingUsername = await prisma.user.findUnique({ where: { username } });
+    const existingUsername = await prisma.user.findUnique({ where: { username: finalUsername } });
     if (existingUsername) {
-      throw new AppError(409, 'Username already exists');
+      if (username) {
+        // User provided this username, throw error
+        throw new AppError(409, 'Username already exists');
+      }
+      // Auto-generated username conflict, try with different suffix
+      const randomSuffix = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+      finalUsername = `${email.split('@')[0]}_${randomSuffix}`;
     }
 
     // Hash password
@@ -33,10 +49,8 @@ export class AuthService {
     const user = await prisma.user.create({
       data: {
         email,
-        username,
+        username: finalUsername,
         passwordHash,
-        name,
-        surname,
       },
     });
 

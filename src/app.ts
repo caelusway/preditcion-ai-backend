@@ -16,6 +16,7 @@ import leaguesRoutes from './routes/leagues.routes';
 import teamRoutes from './routes/team.routes';
 import favoriteLeagueRoutes from './routes/favorite-league.routes';
 import couponRoutes from './routes/coupon.routes';
+import syncRoutes from './routes/sync.routes';
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/static', staticRoutes);
 app.use('/leagues', leaguesRoutes);
 app.use('/teams', teamRoutes);
 app.use('/coupons', couponRoutes);
+app.use('/sync', syncRoutes);
 
 // Alias routes for API compatibility
 app.use('/user/profile', userRoutes);

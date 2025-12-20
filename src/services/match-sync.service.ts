@@ -1,14 +1,28 @@
-import { footballAPIService } from './football-api.service';
+import { footballAPIService, TOP_5_LEAGUES, LEAGUE_IDS } from './football-api.service';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
 
 /**
  * Service to sync football data from API-Football to database
- * Focuses on Premier League 2023-2024 season for demo purposes
+ * Syncs Top 5 European leagues: Premier League, La Liga, Serie A, Bundesliga, Ligue 1
  */
 export class MatchSyncService {
-  private readonly PREMIER_LEAGUE_SEASON = 2023;
+  private readonly PREMIER_LEAGUE_SEASON = 2024;
+  private readonly CURRENT_SEASON = 2024; // For Dec 2024 - May 2025, season is 2024
+
+  /**
+   * Get current season based on today's date
+   * Football seasons run from August to May
+   * Aug-Dec: use current year, Jan-May: use previous year
+   */
+  private getCurrentSeason(): number {
+    const now = new Date();
+    const month = now.getMonth(); // 0-11
+    const year = now.getFullYear();
+    // If Jan-July (0-6), use previous year. If Aug-Dec (7-11), use current year
+    return month < 7 ? year - 1 : year;
+  }
 
   /**
    * Sync all Premier League teams for 2024-2025 season
@@ -550,6 +564,563 @@ export class MatchSyncService {
       logger.error({ error }, 'Full sync failed');
       throw error;
     }
+  }
+
+  /**
+   * Sync teams for all Top 5 leagues
+   */
+  async syncTeamsForAllLeagues(): Promise<void> {
+    logger.info('Starting team sync for Top 5 leagues...');
+
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        syncType: 'teams',
+        status: 'started',
+        leagueIds: TOP_5_LEAGUES.join(','),
+      },
+    });
+
+    let itemsProcessed = 0;
+    let itemsFailed = 0;
+
+    try {
+      const season = this.getCurrentSeason();
+      const leagueTeams = await footballAPIService.getTeamsForLeagues(TOP_5_LEAGUES, season);
+
+      for (const league of leagueTeams) {
+        for (const team of league.teams) {
+          try {
+            await prisma.team.upsert({
+              where: { apiId: team.id.toString() },
+              create: {
+                apiId: team.id.toString(),
+                name: team.name,
+                logoUrl: team.logo,
+                country: league.country,
+                league: league.leagueName,
+              },
+              update: {
+                name: team.name,
+                logoUrl: team.logo,
+                country: league.country,
+                league: league.leagueName,
+              },
+            });
+            itemsProcessed++;
+          } catch (error) {
+            logger.error({ error, teamName: team.name }, 'Failed to sync team');
+            itemsFailed++;
+          }
+        }
+      }
+
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'completed',
+          itemsProcessed,
+          itemsFailed,
+          completedAt: new Date(),
+        },
+      });
+
+      logger.info({ itemsProcessed, itemsFailed }, 'Team sync for all leagues completed');
+    } catch (error) {
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'failed',
+          itemsProcessed,
+          itemsFailed,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          completedAt: new Date(),
+        },
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Sync upcoming fixtures for next N days for all Top 5 leagues
+   */
+  async syncUpcomingFixtures(days: number = 7): Promise<{ processed: number; failed: number }> {
+    logger.info({ days }, 'Starting upcoming fixtures sync for Top 5 leagues...');
+
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        syncType: 'fixtures',
+        status: 'started',
+        leagueIds: TOP_5_LEAGUES.join(','),
+      },
+    });
+
+    let itemsProcessed = 0;
+    let itemsFailed = 0;
+
+    try {
+      // Generate dates for next N days
+      const dates: string[] = [];
+      for (let i = 0; i <= days; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        dates.push(date.toISOString().split('T')[0]);
+      }
+
+      for (const date of dates) {
+        try {
+          const fixtures = await footballAPIService.getFixturesByDate(date, TOP_5_LEAGUES);
+
+          for (const fixture of fixtures) {
+            try {
+              // Get or create teams
+              let homeTeam = await prisma.team.findUnique({
+                where: { apiId: fixture.teams.home.id.toString() },
+              });
+
+              let awayTeam = await prisma.team.findUnique({
+                where: { apiId: fixture.teams.away.id.toString() },
+              });
+
+              // Create teams if not exist
+              if (!homeTeam) {
+                homeTeam = await prisma.team.create({
+                  data: {
+                    apiId: fixture.teams.home.id.toString(),
+                    name: fixture.teams.home.name,
+                    logoUrl: fixture.teams.home.logo,
+                    country: fixture.league.country,
+                    league: fixture.league.name,
+                  },
+                });
+              }
+
+              if (!awayTeam) {
+                awayTeam = await prisma.team.create({
+                  data: {
+                    apiId: fixture.teams.away.id.toString(),
+                    name: fixture.teams.away.name,
+                    logoUrl: fixture.teams.away.logo,
+                    country: fixture.league.country,
+                    league: fixture.league.name,
+                  },
+                });
+              }
+
+              const matchStatus = this.mapFixtureStatus(fixture.fixture.status.short);
+
+              // Upsert match
+              await prisma.match.upsert({
+                where: { apiId: fixture.fixture.id.toString() },
+                create: {
+                  apiId: fixture.fixture.id.toString(),
+                  homeTeamId: homeTeam.id,
+                  awayTeamId: awayTeam.id,
+                  kickoffTime: new Date(fixture.fixture.date),
+                  status: matchStatus,
+                  homeScore: fixture.goals.home,
+                  awayScore: fixture.goals.away,
+                  venue: fixture.fixture.venue?.name,
+                  referee: fixture.fixture.referee,
+                  league: fixture.league.name,
+                  leagueId: fixture.league.id,
+                  season: fixture.league.season.toString(),
+                  round: fixture.league.round,
+                  externalData: fixture as any,
+                },
+                update: {
+                  kickoffTime: new Date(fixture.fixture.date),
+                  status: matchStatus,
+                  homeScore: fixture.goals.home,
+                  awayScore: fixture.goals.away,
+                  venue: fixture.fixture.venue?.name,
+                  referee: fixture.fixture.referee,
+                  league: fixture.league.name,
+                  leagueId: fixture.league.id,
+                  round: fixture.league.round,
+                  externalData: fixture as any,
+                },
+              });
+
+              itemsProcessed++;
+            } catch (error) {
+              logger.error({ error, fixtureId: fixture.fixture.id }, 'Failed to sync fixture');
+              itemsFailed++;
+            }
+          }
+        } catch (error) {
+          logger.error({ error, date }, 'Failed to fetch fixtures for date');
+        }
+      }
+
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'completed',
+          itemsProcessed,
+          itemsFailed,
+          completedAt: new Date(),
+        },
+      });
+
+      logger.info({ itemsProcessed, itemsFailed }, 'Upcoming fixtures sync completed');
+      return { processed: itemsProcessed, failed: itemsFailed };
+    } catch (error) {
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'failed',
+          itemsProcessed,
+          itemsFailed,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          completedAt: new Date(),
+        },
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Sync odds for upcoming matches in database
+   */
+  async syncOddsForUpcomingMatches(): Promise<{ processed: number; failed: number }> {
+    logger.info('Starting odds sync for upcoming matches...');
+
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        syncType: 'odds',
+        status: 'started',
+      },
+    });
+
+    let itemsProcessed = 0;
+    let itemsFailed = 0;
+
+    try {
+      // Get upcoming matches from database
+      const upcomingMatches = await prisma.match.findMany({
+        where: {
+          status: 'upcoming',
+          apiId: { not: null },
+          kickoffTime: {
+            gte: new Date(),
+            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Next 7 days
+          },
+        },
+        orderBy: { kickoffTime: 'asc' },
+        take: 100, // Limit to avoid too many API calls
+      });
+
+      logger.info({ matchCount: upcomingMatches.length }, 'Found upcoming matches to sync odds');
+
+      for (const match of upcomingMatches) {
+        try {
+          const fixtureId = parseInt(match.apiId!);
+          const oddsData = await footballAPIService.getFixtureOdds(fixtureId);
+
+          if (!oddsData || !oddsData.bookmakers || oddsData.bookmakers.length === 0) {
+            continue; // No odds available
+          }
+
+          // Get first bookmaker (usually the most popular)
+          const bookmaker = oddsData.bookmakers[0];
+          const bets = bookmaker.bets;
+
+          // Extract odds
+          const matchWinner = bets.find(b => b.name === 'Match Winner' || b.id === 1);
+          const overUnder25 = bets.find(b => b.name === 'Goals Over/Under' && b.values.some(v => v.value === 'Over 2.5'));
+          const overUnder15 = bets.find(b => b.name === 'Goals Over/Under' && b.values.some(v => v.value === 'Over 1.5'));
+          const overUnder35 = bets.find(b => b.name === 'Goals Over/Under' && b.values.some(v => v.value === 'Over 3.5'));
+          const btts = bets.find(b => b.name === 'Both Teams Score' || b.id === 8);
+          const doubleChance = bets.find(b => b.name === 'Double Chance' || b.id === 12);
+
+          const getOddValue = (bet: any, value: string): number | null => {
+            if (!bet) return null;
+            const found = bet.values.find((v: any) => v.value === value);
+            return found ? parseFloat(found.odd) : null;
+          };
+
+          await prisma.matchOdds.upsert({
+            where: { matchId: match.id },
+            create: {
+              matchId: match.id,
+              matchApiId: match.apiId!,
+              homeWinOdds: getOddValue(matchWinner, 'Home'),
+              drawOdds: getOddValue(matchWinner, 'Draw'),
+              awayWinOdds: getOddValue(matchWinner, 'Away'),
+              homeOrDrawOdds: getOddValue(doubleChance, 'Home/Draw'),
+              awayOrDrawOdds: getOddValue(doubleChance, 'Draw/Away'),
+              homeOrAwayOdds: getOddValue(doubleChance, 'Home/Away'),
+              over25Odds: getOddValue(overUnder25, 'Over 2.5'),
+              under25Odds: getOddValue(overUnder25, 'Under 2.5'),
+              over15Odds: getOddValue(overUnder15, 'Over 1.5'),
+              under15Odds: getOddValue(overUnder15, 'Under 1.5'),
+              over35Odds: getOddValue(overUnder35, 'Over 3.5'),
+              under35Odds: getOddValue(overUnder35, 'Under 3.5'),
+              bttsYesOdds: getOddValue(btts, 'Yes'),
+              bttsNoOdds: getOddValue(btts, 'No'),
+              bookmaker: bookmaker.name,
+              bookmakerId: bookmaker.id,
+              rawData: oddsData as any,
+            },
+            update: {
+              homeWinOdds: getOddValue(matchWinner, 'Home'),
+              drawOdds: getOddValue(matchWinner, 'Draw'),
+              awayWinOdds: getOddValue(matchWinner, 'Away'),
+              homeOrDrawOdds: getOddValue(doubleChance, 'Home/Draw'),
+              awayOrDrawOdds: getOddValue(doubleChance, 'Draw/Away'),
+              homeOrAwayOdds: getOddValue(doubleChance, 'Home/Away'),
+              over25Odds: getOddValue(overUnder25, 'Over 2.5'),
+              under25Odds: getOddValue(overUnder25, 'Under 2.5'),
+              over15Odds: getOddValue(overUnder15, 'Over 1.5'),
+              under15Odds: getOddValue(overUnder15, 'Under 1.5'),
+              over35Odds: getOddValue(overUnder35, 'Over 3.5'),
+              under35Odds: getOddValue(overUnder35, 'Under 3.5'),
+              bttsYesOdds: getOddValue(btts, 'Yes'),
+              bttsNoOdds: getOddValue(btts, 'No'),
+              bookmaker: bookmaker.name,
+              bookmakerId: bookmaker.id,
+              rawData: oddsData as any,
+            },
+          });
+
+          itemsProcessed++;
+        } catch (error) {
+          logger.error({ error, matchId: match.id, apiId: match.apiId }, 'Failed to sync odds for match');
+          itemsFailed++;
+        }
+      }
+
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'completed',
+          itemsProcessed,
+          itemsFailed,
+          completedAt: new Date(),
+        },
+      });
+
+      logger.info({ itemsProcessed, itemsFailed }, 'Odds sync completed');
+      return { processed: itemsProcessed, failed: itemsFailed };
+    } catch (error) {
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'failed',
+          itemsProcessed,
+          itemsFailed,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          completedAt: new Date(),
+        },
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Sync finished matches from the past N days
+   */
+  async syncFinishedMatches(days: number = 7): Promise<{ processed: number; failed: number }> {
+    logger.info({ days }, 'Starting finished matches sync...');
+
+    const syncLog = await prisma.syncLog.create({
+      data: {
+        syncType: 'fixtures',
+        status: 'started',
+        leagueIds: TOP_5_LEAGUES.join(','),
+      },
+    });
+
+    let itemsProcessed = 0;
+    let itemsFailed = 0;
+
+    try {
+      // Generate dates for past N days
+      const dates: string[] = [];
+      for (let i = days; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+      }
+
+      for (const date of dates) {
+        try {
+          const fixtures = await footballAPIService.getFixturesByDate(date, TOP_5_LEAGUES);
+
+          // Only process finished matches
+          const finishedFixtures = fixtures.filter(f =>
+            ['FT', 'AET', 'PEN'].includes(f.fixture.status.short)
+          );
+
+          for (const fixture of finishedFixtures) {
+            try {
+              // Get or create teams
+              let homeTeam = await prisma.team.findUnique({
+                where: { apiId: fixture.teams.home.id.toString() },
+              });
+
+              let awayTeam = await prisma.team.findUnique({
+                where: { apiId: fixture.teams.away.id.toString() },
+              });
+
+              if (!homeTeam) {
+                homeTeam = await prisma.team.create({
+                  data: {
+                    apiId: fixture.teams.home.id.toString(),
+                    name: fixture.teams.home.name,
+                    logoUrl: fixture.teams.home.logo,
+                    country: fixture.league.country,
+                    league: fixture.league.name,
+                  },
+                });
+              }
+
+              if (!awayTeam) {
+                awayTeam = await prisma.team.create({
+                  data: {
+                    apiId: fixture.teams.away.id.toString(),
+                    name: fixture.teams.away.name,
+                    logoUrl: fixture.teams.away.logo,
+                    country: fixture.league.country,
+                    league: fixture.league.name,
+                  },
+                });
+              }
+
+              await prisma.match.upsert({
+                where: { apiId: fixture.fixture.id.toString() },
+                create: {
+                  apiId: fixture.fixture.id.toString(),
+                  homeTeamId: homeTeam.id,
+                  awayTeamId: awayTeam.id,
+                  kickoffTime: new Date(fixture.fixture.date),
+                  status: 'finished',
+                  homeScore: fixture.goals.home,
+                  awayScore: fixture.goals.away,
+                  venue: fixture.fixture.venue?.name,
+                  referee: fixture.fixture.referee,
+                  league: fixture.league.name,
+                  leagueId: fixture.league.id,
+                  season: fixture.league.season.toString(),
+                  round: fixture.league.round,
+                  externalData: fixture as any,
+                },
+                update: {
+                  status: 'finished',
+                  homeScore: fixture.goals.home,
+                  awayScore: fixture.goals.away,
+                  venue: fixture.fixture.venue?.name,
+                  referee: fixture.fixture.referee,
+                  league: fixture.league.name,
+                  leagueId: fixture.league.id,
+                  round: fixture.league.round,
+                  externalData: fixture as any,
+                },
+              });
+
+              itemsProcessed++;
+            } catch (error) {
+              logger.error({ error, fixtureId: fixture.fixture.id }, 'Failed to sync finished fixture');
+              itemsFailed++;
+            }
+          }
+        } catch (error) {
+          logger.error({ error, date }, 'Failed to fetch finished fixtures for date');
+        }
+      }
+
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'completed',
+          itemsProcessed,
+          itemsFailed,
+          completedAt: new Date(),
+        },
+      });
+
+      logger.info({ itemsProcessed, itemsFailed }, 'Finished matches sync completed');
+      return { processed: itemsProcessed, failed: itemsFailed };
+    } catch (error) {
+      await prisma.syncLog.update({
+        where: { id: syncLog.id },
+        data: {
+          status: 'failed',
+          itemsProcessed,
+          itemsFailed,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          completedAt: new Date(),
+        },
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Full sync for Top 5 leagues: upcoming fixtures + odds + finished matches
+   * This is the main method to be called by scheduler
+   */
+  async syncAllMatches(): Promise<{
+    fixtures: { processed: number; failed: number };
+    finished: { processed: number; failed: number };
+    odds: { processed: number; failed: number };
+  }> {
+    logger.info('Starting full match sync for Top 5 leagues...');
+
+    try {
+      // 1. Sync teams first (if needed)
+      await this.syncTeamsForAllLeagues();
+
+      // 2. Sync upcoming fixtures for next 7 days
+      const fixturesResult = await this.syncUpcomingFixtures(7);
+
+      // 3. Sync finished matches from past 3 days
+      const finishedResult = await this.syncFinishedMatches(3);
+
+      // 4. Sync odds for upcoming matches
+      const oddsResult = await this.syncOddsForUpcomingMatches();
+
+      logger.info({
+        fixtures: fixturesResult,
+        finished: finishedResult,
+        odds: oddsResult,
+      }, '✅ Full match sync completed');
+
+      return {
+        fixtures: fixturesResult,
+        finished: finishedResult,
+        odds: oddsResult,
+      };
+    } catch (error) {
+      logger.error({ error }, 'Full match sync failed');
+      throw error;
+    }
+  }
+
+  /**
+   * Get last sync status
+   */
+  async getLastSyncStatus(): Promise<{
+    fixtures: any;
+    odds: any;
+    teams: any;
+  }> {
+    const [fixtures, odds, teams] = await Promise.all([
+      prisma.syncLog.findFirst({
+        where: { syncType: 'fixtures' },
+        orderBy: { startedAt: 'desc' },
+      }),
+      prisma.syncLog.findFirst({
+        where: { syncType: 'odds' },
+        orderBy: { startedAt: 'desc' },
+      }),
+      prisma.syncLog.findFirst({
+        where: { syncType: 'teams' },
+        orderBy: { startedAt: 'desc' },
+      }),
+    ]);
+
+    return { fixtures, odds, teams };
   }
 }
 

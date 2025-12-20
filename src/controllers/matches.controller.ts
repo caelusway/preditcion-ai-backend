@@ -810,6 +810,171 @@ export class MatchesController {
       next(error);
     }
   }
+
+  // GET /matches/finished - Get finished matches with date range
+  async getFinishedMatches(req: Request, res: Response, next: NextFunction) {
+    try {
+      const startDateParam = req.query.startDate as string;
+      const endDateParam = req.query.endDate as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+
+      // Default: last 7 days
+      const endDate = endDateParam ? new Date(endDateParam) : new Date();
+      endDate.setHours(23, 59, 59, 999);
+
+      const startDate = startDateParam
+        ? new Date(startDateParam)
+        : new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      startDate.setHours(0, 0, 0, 0);
+
+      // If using real API data
+      if (env.FOOTBALL_DATA_SOURCE === 'api') {
+        try {
+          // Fetch all dates in range
+          const allFixtures: any[] = [];
+          const currentDate = new Date(startDate);
+
+          while (currentDate <= endDate) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const fixtures = await footballAPIService.getFixturesByDate(dateStr, TOP_5_LEAGUES);
+
+            // Filter only finished matches
+            const finishedFixtures = fixtures.filter(f =>
+              ['FT', 'AET', 'PEN'].includes(f.fixture.status.short)
+            );
+
+            allFixtures.push(...finishedFixtures);
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          // Group by league
+          const leagueMap = new Map<string, {
+            league: string;
+            country: string;
+            leagueImg: string;
+            leagueId: number;
+            matches: any[];
+          }>();
+
+          for (const fixture of allFixtures) {
+            const leagueKey = `${fixture.league.id}-${fixture.league.name}`;
+
+            if (!leagueMap.has(leagueKey)) {
+              leagueMap.set(leagueKey, {
+                league: fixture.league.name,
+                country: fixture.league.country,
+                leagueImg: fixture.league.logo,
+                leagueId: fixture.league.id,
+                matches: [],
+              });
+            }
+
+            leagueMap.get(leagueKey)!.matches.push({
+              id: fixture.fixture.id.toString(),
+              apiId: fixture.fixture.id.toString(),
+              homeTeam: {
+                name: fixture.teams.home.name,
+                logoUrl: fixture.teams.home.logo,
+              },
+              awayTeam: {
+                name: fixture.teams.away.name,
+                logoUrl: fixture.teams.away.logo,
+              },
+              kickoffTime: fixture.fixture.date,
+              status: 'finished',
+              homeScore: fixture.goals.home,
+              awayScore: fixture.goals.away,
+              venue: fixture.fixture.venue?.name,
+              round: fixture.league.round,
+            });
+          }
+
+          // Paginate
+          const allLeagues = Array.from(leagueMap.values()).filter(l => l.matches.length > 0);
+          const totalMatches = allLeagues.reduce((acc, l) => acc + l.matches.length, 0);
+
+          return res.status(200).json({
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0],
+            totalMatches,
+            matches: allLeagues,
+          });
+        } catch (apiError) {
+          logger.error({ error: apiError }, 'Failed to fetch finished matches from API');
+        }
+      }
+
+      // Fallback to database
+      const matches = await prisma.match.findMany({
+        where: {
+          status: 'finished',
+          kickoffTime: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        include: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+        orderBy: {
+          kickoffTime: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      });
+
+      const totalCount = await prisma.match.count({
+        where: {
+          status: 'finished',
+          kickoffTime: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      });
+
+      // Group by league
+      const leagueMap = new Map<string, any>();
+      for (const match of matches) {
+        const leagueKey = match.league || 'Unknown';
+        if (!leagueMap.has(leagueKey)) {
+          leagueMap.set(leagueKey, {
+            league: match.league,
+            country: match.homeTeam.country,
+            leagueImg: `https://media.api-sports.io/football/leagues/39.png`,
+            leagueId: LEAGUE_IDS.PREMIER_LEAGUE,
+            matches: [],
+          });
+        }
+        leagueMap.get(leagueKey)!.matches.push({
+          id: match.id,
+          apiId: match.apiId,
+          homeTeam: match.homeTeam,
+          awayTeam: match.awayTeam,
+          kickoffTime: match.kickoffTime,
+          status: match.status,
+          homeScore: match.homeScore,
+          awayScore: match.awayScore,
+          venue: match.venue,
+          round: match.round,
+        });
+      }
+
+      return res.status(200).json({
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+        totalMatches: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+        matches: Array.from(leagueMap.values()),
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const matchesController = new MatchesController();

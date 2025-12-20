@@ -126,6 +126,80 @@ router.get('/upcoming', matchesController.getUpcomingMatches);
 
 /**
  * @swagger
+ * /matches/finished:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Get finished/past matches
+ *     description: Returns finished matches with optional date range filtering. Defaults to last 7 days.
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-12-01"
+ *         description: Start date for filtering (YYYY-MM-DD). Defaults to 7 days ago.
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2025-12-20"
+ *         description: End date for filtering (YYYY-MM-DD). Defaults to today.
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *           maximum: 100
+ *         description: Number of matches per page
+ *     responses:
+ *       200:
+ *         description: Finished matches grouped by league
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 startDate:
+ *                   type: string
+ *                   format: date
+ *                 endDate:
+ *                   type: string
+ *                   format: date
+ *                 totalMatches:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 matches:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       league:
+ *                         type: string
+ *                       country:
+ *                         type: string
+ *                       leagueImg:
+ *                         type: string
+ *                       matches:
+ *                         type: array
+ */
+router.get('/finished', matchesController.getFinishedMatches);
+
+/**
+ * @swagger
  * /matches/home-stats:
  *   get:
  *     tags:

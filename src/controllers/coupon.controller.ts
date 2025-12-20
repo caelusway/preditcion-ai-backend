@@ -3,12 +3,12 @@ import { couponService } from '../services/coupon.service';
 
 export class CouponController {
   /**
-   * GET /coupons - Get all user coupons
+   * GET /coupons - Get all user coupons with status
    */
   async getCoupons(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const coupons = await couponService.getCoupons(userId);
+      const coupons = await couponService.getCouponsWithStatus(userId);
       res.status(200).json({ coupons });
     } catch (error) {
       next(error);
@@ -61,8 +61,8 @@ export class CouponController {
   async createCoupon(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const { name } = req.body;
-      const coupon = await couponService.createCoupon(userId, { name });
+      const { name, currency, stake } = req.body;
+      const coupon = await couponService.createCoupon(userId, { name, currency, stake });
       res.status(201).json({ coupon });
     } catch (error) {
       next(error);
@@ -90,8 +90,8 @@ export class CouponController {
     try {
       const userId = req.user!.id;
       const { id } = req.params;
-      const { name, status } = req.body;
-      const coupon = await couponService.updateCoupon(userId, id, { name, status });
+      const { name, status, currency, stake } = req.body;
+      const coupon = await couponService.updateCoupon(userId, id, { name, status, currency, stake });
       res.status(200).json({ coupon });
     } catch (error) {
       next(error);

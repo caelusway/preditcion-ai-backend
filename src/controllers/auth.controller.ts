@@ -115,8 +115,8 @@ export class AuthController {
     next: NextFunction
   ) {
     try {
-      const { email, username, password, name, surname } = req.body;
-      const result = await authService.register(email, username, password, name, surname);
+      const { email, password, username } = req.body;
+      const result = await authService.register(email, password, username);
       res.status(201).json(result);
     } catch (error) {
       next(error);

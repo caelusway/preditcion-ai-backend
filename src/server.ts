@@ -2,6 +2,7 @@ import app from './app';
 import { env } from './config/env';
 import { logger } from './lib/logger';
 import { prisma } from './lib/prisma';
+import { schedulerService } from './services/scheduler.service';
 
 const PORT = env.PORT;
 const HOST = env.HOST;
@@ -24,11 +25,17 @@ async function startServer() {
 🏥 Health check: ${baseUrl}/health
 🌍 Environment: ${env.NODE_ENV}
       `);
+
+      // Start the match sync scheduler
+      schedulerService.start();
     });
 
     // Graceful shutdown
     const gracefulShutdown = async (signal: string) => {
       logger.info(`${signal} received, closing server gracefully...`);
+
+      // Stop scheduler
+      schedulerService.stop();
 
       server.close(async () => {
         logger.info('Server closed');

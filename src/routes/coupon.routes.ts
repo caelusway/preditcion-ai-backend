@@ -42,12 +42,46 @@ const router = Router();
  *           example: "Weekend Coupon"
  *         status:
  *           type: string
- *           enum: [active, completed]
+ *           enum: [active, completed, cancelled]
  *           example: active
+ *         result:
+ *           type: string
+ *           enum: [pending, won, lost, partial]
+ *           description: Coupon result based on selection outcomes
+ *           example: pending
  *         totalOdds:
  *           type: number
  *           description: Combined odds of all selections
  *           example: 5.67
+ *         currency:
+ *           type: string
+ *           enum: [TRY, USD, EUR, GBP]
+ *           description: Currency for the stake
+ *           example: TRY
+ *         stake:
+ *           type: number
+ *           description: Amount wagered
+ *           example: 100
+ *         potentialWin:
+ *           type: number
+ *           description: Potential winnings (stake * totalOdds)
+ *           example: 567
+ *         selectionsCount:
+ *           type: integer
+ *           description: Total number of selections
+ *           example: 3
+ *         wonCount:
+ *           type: integer
+ *           description: Number of won selections
+ *           example: 1
+ *         lostCount:
+ *           type: integer
+ *           description: Number of lost selections
+ *           example: 0
+ *         pendingCount:
+ *           type: integer
+ *           description: Number of pending selections
+ *           example: 2
  *         selections:
  *           type: array
  *           items:
@@ -211,6 +245,15 @@ router.get('/:id', requireAuth, couponController.getCouponById);
  *                 type: string
  *                 description: Optional coupon name
  *                 example: "Weekend Bets"
+ *               currency:
+ *                 type: string
+ *                 enum: [TRY, USD, EUR, GBP]
+ *                 description: Currency for the stake (default TRY)
+ *                 example: "TRY"
+ *               stake:
+ *                 type: number
+ *                 description: Amount to wager
+ *                 example: 100
  *     responses:
  *       201:
  *         description: Coupon created successfully
@@ -258,6 +301,15 @@ router.post('/', requireAuth, couponController.createCoupon);
  *                 enum: [active, completed]
  *                 description: Coupon status
  *                 example: "completed"
+ *               currency:
+ *                 type: string
+ *                 enum: [TRY, USD, EUR, GBP]
+ *                 description: Currency for the stake
+ *                 example: "TRY"
+ *               stake:
+ *                 type: number
+ *                 description: Amount to wager
+ *                 example: 100
  *     responses:
  *       200:
  *         description: Coupon updated successfully
