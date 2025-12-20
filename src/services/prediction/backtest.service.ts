@@ -16,6 +16,18 @@ interface MatchResult {
   actualOver25: boolean;
   actualOver15: boolean;
   actualOver35: boolean;
+  kickoffTime?: Date;
+  league?: string;
+}
+
+interface OddsData {
+  homeWin: number | null;
+  draw: number | null;
+  awayWin: number | null;
+  bttsYes: number | null;
+  bttsNo: number | null;
+  over25: number | null;
+  under25: number | null;
 }
 
 interface PredictionResult {
@@ -31,6 +43,7 @@ interface PredictionResult {
   over25Prob: number;
   predictedScore: string;
   expectedGoals: number;
+  odds?: OddsData;
 }
 
 interface BacktestMatch {
@@ -217,6 +230,8 @@ export class BacktestService {
       actualOver25,
       actualOver15,
       actualOver35,
+      kickoffTime: match.kickoffTime,
+      league: match.league || 'Unknown',
     };
 
     // Generate prediction for this match
@@ -229,6 +244,48 @@ export class BacktestService {
       const predictedOver25 = over25Prob > 50;
       const predictedScore = prediction.correctScore.mostLikely;
       const expectedGoals = prediction.overUnder.expectedGoals;
+
+      // Extract odds from factors (format: "Oranlar: X.XX - X.XX - X.XX")
+      let oddsData: OddsData = {
+        homeWin: null,
+        draw: null,
+        awayWin: null,
+        bttsYes: null,
+        bttsNo: null,
+        over25: null,
+        under25: null,
+      };
+
+      // Parse odds from factors
+      const oddsFactor = prediction.factors?.find(f => f.type === 'odds' && f.description.includes('Oranlar:'));
+      if (oddsFactor) {
+        const oddsMatch = oddsFactor.description.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
+        if (oddsMatch) {
+          oddsData.homeWin = parseFloat(oddsMatch[1]);
+          oddsData.draw = parseFloat(oddsMatch[2]);
+          oddsData.awayWin = parseFloat(oddsMatch[3]);
+        }
+      }
+
+      // Parse BTTS odds
+      const bttsFactor = prediction.factors?.find(f => f.type === 'odds' && f.description.includes('BTTS'));
+      if (bttsFactor) {
+        const bttsMatch = bttsFactor.description.match(/Yes\s+(\d+\.?\d*).*No\s+(\d+\.?\d*)/);
+        if (bttsMatch) {
+          oddsData.bttsYes = parseFloat(bttsMatch[1]);
+          oddsData.bttsNo = parseFloat(bttsMatch[2]);
+        }
+      }
+
+      // Parse O2.5 odds
+      const overFactor = prediction.factors?.find(f => f.type === 'odds' && f.description.includes('O2.5'));
+      if (overFactor) {
+        const overMatch = overFactor.description.match(/Over\s+(\d+\.?\d*).*Under\s+(\d+\.?\d*)/);
+        if (overMatch) {
+          oddsData.over25 = parseFloat(overMatch[1]);
+          oddsData.under25 = parseFloat(overMatch[2]);
+        }
+      }
 
       const predictionResult: PredictionResult = {
         matchId: match.id,
@@ -243,6 +300,7 @@ export class BacktestService {
         over25Prob,
         predictedScore,
         expectedGoals,
+        odds: oddsData,
       };
 
       // Calculate results

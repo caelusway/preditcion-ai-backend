@@ -790,19 +790,28 @@ export class MatchesController {
     }
   }
 
-  // POST /matches/backtest - Run backtest on historical matches
+  // GET/POST /matches/backtest - Run backtest on historical matches
   async runBacktest(req: Request, res: Response, next: NextFunction) {
     try {
-      const { startDate, endDate, limit = 50 } = req.body;
+      // Support both GET query params and POST body
+      const params = req.method === 'GET' ? req.query : req.body;
+      const { startDate, endDate, limit = 50 } = params;
+
+      // If no dates provided, use last 90 days
+      let finalStartDate = startDate;
+      let finalEndDate = endDate;
 
       if (!startDate || !endDate) {
-        throw new AppError(400, 'startDate and endDate are required');
+        const end = new Date('2024-12-15'); // Use 2024-2025 season dates
+        const start = new Date('2024-10-01');
+        finalStartDate = start.toISOString().split('T')[0];
+        finalEndDate = end.toISOString().split('T')[0];
       }
 
       const report = await backtestService.runBacktest({
-        startDate,
-        endDate,
-        limit: Math.min(limit, 100),
+        startDate: finalStartDate,
+        endDate: finalEndDate,
+        limit: Math.min(Number(limit), 200),
       });
 
       return res.status(200).json(report);

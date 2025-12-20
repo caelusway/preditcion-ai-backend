@@ -49,7 +49,7 @@ export class DataAggregatorService {
         this.fetchRecentMatches(homeTeamApiId, season),
         this.fetchRecentMatches(awayTeamApiId, season),
         this.fetchStandings(leagueId, season, homeTeamApiId, awayTeamApiId),
-        this.fetchOdds(fixtureId),
+        this.fetchOdds(fixtureId, externalData?.odds), // Pass stored odds for historical matches
       ]);
 
     // Calculate data quality
@@ -278,50 +278,76 @@ export class DataAggregatorService {
   }
 
   /**
-   * Fetch betting odds
+   * Fetch betting odds - first checks stored odds in externalData, then API
    */
-  private async fetchOdds(fixtureId: number | null): Promise<OddsData | null> {
+  private async fetchOdds(fixtureId: number | null, storedOdds?: any): Promise<OddsData | null> {
+    // First, try to parse odds from stored externalData (for historical matches)
+    console.log(`[ODDS] fixtureId=${fixtureId} hasStoredOdds=${!!storedOdds} hasBookmakers=${!!storedOdds?.bookmakers}`);
+
+    if (storedOdds?.bookmakers?.[0]) {
+      const parsed = this.parseOddsFromBookmakers(storedOdds.bookmakers);
+      console.log(`[ODDS] Parsed: home=${parsed?.matchWinner?.home} draw=${parsed?.matchWinner?.draw} away=${parsed?.matchWinner?.away}`);
+      if (parsed && parsed.matchWinner.home > 0) {
+        console.log('[ODDS] Using stored odds from externalData');
+        return parsed;
+      }
+    }
+
+    // Fall back to API call for upcoming matches
     if (!fixtureId) return null;
 
     try {
       const oddsData = await footballAPIService.getFixtureOdds(fixtureId);
       if (!oddsData?.bookmakers?.[0]) return null;
 
-      const bookmaker = oddsData.bookmakers[0];
-      const result: OddsData = {
-        bookmaker: bookmaker.name,
-        matchWinner: { home: 0, draw: 0, away: 0 },
-      };
-
-      for (const bet of bookmaker.bets) {
-        const betName = bet.name.toLowerCase();
-
-        if (betName.includes('match winner') || betName === 'home/away') {
-          for (const v of bet.values) {
-            if (v.value === 'Home') result.matchWinner.home = parseFloat(v.odd);
-            else if (v.value === 'Draw') result.matchWinner.draw = parseFloat(v.odd);
-            else if (v.value === 'Away') result.matchWinner.away = parseFloat(v.odd);
-          }
-        } else if (betName.includes('over/under') && betName.includes('2.5')) {
-          result.overUnder = { over25: 0, under25: 0 };
-          for (const v of bet.values) {
-            if (v.value.includes('Over')) result.overUnder.over25 = parseFloat(v.odd);
-            else if (v.value.includes('Under')) result.overUnder.under25 = parseFloat(v.odd);
-          }
-        } else if (betName.includes('both teams score')) {
-          result.btts = { yes: 0, no: 0 };
-          for (const v of bet.values) {
-            if (v.value === 'Yes') result.btts.yes = parseFloat(v.odd);
-            else if (v.value === 'No') result.btts.no = parseFloat(v.odd);
-          }
-        }
-      }
-
-      return result;
+      return this.parseOddsFromBookmakers(oddsData.bookmakers);
     } catch (error) {
       logger.warn({ fixtureId, error }, 'Failed to fetch odds');
       return null;
     }
+  }
+
+  /**
+   * Parse odds from bookmakers array (works for both stored and API data)
+   */
+  private parseOddsFromBookmakers(bookmakers: any[]): OddsData | null {
+    if (!bookmakers?.[0]) return null;
+
+    const bookmaker = bookmakers[0];
+    const result: OddsData = {
+      bookmaker: bookmaker.name,
+      matchWinner: { home: 0, draw: 0, away: 0 },
+    };
+
+    for (const bet of bookmaker.bets) {
+      const betName = bet.name.toLowerCase();
+
+      // Match Winner / 1X2 - multiple possible names
+      if (betName.includes('match winner') || betName === 'home/away' ||
+          betName === '1x2' || betName.includes('full time result') ||
+          betName.includes('three way') || betName.includes('3-way')) {
+        for (const v of bet.values) {
+          const val = v.value?.toLowerCase() || '';
+          if (val === 'home' || val === '1') result.matchWinner.home = parseFloat(v.odd);
+          else if (val === 'draw' || val === 'x') result.matchWinner.draw = parseFloat(v.odd);
+          else if (val === 'away' || val === '2') result.matchWinner.away = parseFloat(v.odd);
+        }
+      } else if (betName.includes('over/under') && betName.includes('2.5')) {
+        result.overUnder = { over25: 0, under25: 0 };
+        for (const v of bet.values) {
+          if (v.value.includes('Over')) result.overUnder.over25 = parseFloat(v.odd);
+          else if (v.value.includes('Under')) result.overUnder.under25 = parseFloat(v.odd);
+        }
+      } else if (betName.includes('both teams score')) {
+        result.btts = { yes: 0, no: 0 };
+        for (const v of bet.values) {
+          if (v.value === 'Yes') result.btts.yes = parseFloat(v.odd);
+          else if (v.value === 'No') result.btts.no = parseFloat(v.odd);
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

@@ -40,15 +40,31 @@ export class MatchOutcomeCalculator extends BaseCalculator {
     // 5. Odds-implied probabilities (10% weight)
     const oddsProbs = this.calculateOddsProbabilities(factors);
 
-    // Combine all probabilities with weights
-    // Increased odds weight as bookmaker odds already account for real home advantage
-    const weights = {
-      poisson: 0.35,
-      form: 0.20,
-      standings: 0.15,
-      h2h: 0.10,
-      odds: 0.20, // Increased from 0.10 - odds are historically most accurate
-    };
+    // DYNAMIC WEIGHTING: When odds not available, redistribute to other factors
+    const hasValidOdds = this.data.odds && this.data.odds.matchWinner.home > 0;
+
+    let weights: { poisson: number; form: number; standings: number; h2h: number; odds: number };
+
+    if (hasValidOdds) {
+      // With odds: Give significant weight to bookmaker odds
+      weights = {
+        poisson: 0.25,
+        form: 0.15,
+        standings: 0.10,
+        h2h: 0.10,
+        odds: 0.40,
+      };
+    } else {
+      // Without odds: Redistribute weight to statistical models
+      // Poisson is most reliable, then form, then standings, then h2h
+      weights = {
+        poisson: 0.45,    // Primary predictor when no odds
+        form: 0.25,       // Strong secondary signal
+        standings: 0.15,  // Position-based signal
+        h2h: 0.15,        // Historical matchup
+        odds: 0.00,       // No weight when no data
+      };
+    }
 
     let homeWin =
       poissonProbs.homeWin * weights.poisson +
@@ -77,23 +93,39 @@ export class MatchOutcomeCalculator extends BaseCalculator {
     draw = this.round(normalized[1]);
     awayWin = this.round(normalized[2]);
 
-    // Determine prediction
-    // Predict draw when probabilities are close (within 5%) and draw is substantial
+    // Determine prediction - IMPROVED DRAW LOGIC
+    // Football draws occur ~26% of the time, so draw prediction should be selective
     let predicted: '1' | 'X' | '2' = '1';
     const margin = Math.abs(homeWin - awayWin);
 
+    // Calculate "closeness" factor - how evenly matched are the teams
+    const maxProb = Math.max(homeWin, awayWin);
+    const minProb = Math.min(homeWin, awayWin);
+    const closenessFactor = minProb / maxProb; // 1.0 = perfectly matched
+
     if (draw >= homeWin && draw >= awayWin) {
+      // Draw has highest probability
       predicted = 'X';
-    } else if (draw >= 28 && margin < 5) {
-      // When home/away are very close and draw is reasonable, predict draw
+    } else if (draw >= 28 && closenessFactor >= 0.85 && margin < 6) {
+      // Strong draw probability AND teams closely matched
+      predicted = 'X';
+    } else if (draw >= 32 && closenessFactor >= 0.75) {
+      // Very high draw probability with reasonably matched teams
       predicted = 'X';
     } else if (awayWin > homeWin) {
       predicted = '2';
     }
+    // Default is '1' (home win)
 
     // Calculate confidence based on margin between top prediction and others
-    const maxProb = Math.max(homeWin, draw, awayWin);
-    const certainty = (maxProb - 33.33) / 66.67; // How far from equal split
+    // OPTIMIZED: More generous certainty calculation
+    const highestProb = Math.max(homeWin, draw, awayWin);
+    const secondProb = [homeWin, draw, awayWin].sort((a, b) => b - a)[1];
+    const probMargin = highestProb - secondProb;
+
+    // New certainty formula: based on margin from runner-up (more intuitive)
+    // margin >= 20% = high certainty, margin ~10% = medium, margin <5% = low
+    const certainty = Math.min(1, probMargin / 25 + 0.3); // Base 0.3, +0.04 per 1% margin
     const confidence = this.calculateConfidence(certainty);
 
     // Add summary factor

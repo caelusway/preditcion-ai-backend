@@ -16,6 +16,8 @@
     "sync": "tsx scripts/sync-football-data.ts",
     "sync:teams": "tsx scripts/sync-football-data.ts teams",
     "sync:fixtures": "tsx scripts/sync-football-data.ts fixtures",
+    "sync:history": "tsx scripts/fetch-historical-matches.ts",
+    "sync:odds": "tsx scripts/fetch-historical-odds.ts",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""

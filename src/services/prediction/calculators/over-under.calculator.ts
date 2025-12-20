@@ -43,6 +43,9 @@ export class OverUnderCalculator extends BaseCalculator {
       '3.5': this.calculateLine(totalXG, 3.5),
     };
 
+    // Check if we have valid odds
+    const hasValidOdds = this.data.odds?.overUnder && this.data.odds.overUnder.over25 > 0;
+
     // Adjust with H2H data if available
     if (this.data.headToHead && this.data.headToHead.total > 0) {
       const h2hOver25Rate = (this.data.headToHead.over25Count / this.data.headToHead.total) * 100;
@@ -55,26 +58,27 @@ export class OverUnderCalculator extends BaseCalculator {
         )
       );
 
-      // Blend 2.5 line with H2H
-      lines['2.5'].over = lines['2.5'].over * 0.75 + h2hOver25Rate * 0.25;
+      // Blend weights depend on whether we have odds
+      const h2hWeight = hasValidOdds ? 0.20 : 0.30;
+      lines['2.5'].over = lines['2.5'].over * (1 - h2hWeight) + h2hOver25Rate * h2hWeight;
       lines['2.5'].under = 100 - lines['2.5'].over;
     }
 
     // Adjust with odds if available
-    if (this.data.odds?.overUnder) {
-      const oddsOver = this.oddsToImpliedProbability(this.data.odds.overUnder.over25);
-      const oddsUnder = this.oddsToImpliedProbability(this.data.odds.overUnder.under25);
+    if (hasValidOdds) {
+      const oddsOver = this.oddsToImpliedProbability(this.data.odds!.overUnder!.over25);
+      const oddsUnder = this.oddsToImpliedProbability(this.data.odds!.overUnder!.under25);
       const oddsTotal = oddsOver + oddsUnder;
       const normalizedOver = (oddsOver / oddsTotal) * 100;
 
-      // Blend: 80% calculated, 20% odds
-      lines['2.5'].over = lines['2.5'].over * 0.8 + normalizedOver * 0.2;
+      // Blend with odds - bookmaker odds are highly accurate for goal markets
+      lines['2.5'].over = lines['2.5'].over * 0.65 + normalizedOver * 0.35;
       lines['2.5'].under = 100 - lines['2.5'].over;
 
       factors.push(
         this.createFactor(
           'odds',
-          `O2.5 Odds: Over ${this.data.odds.overUnder.over25.toFixed(2)} / Under ${this.data.odds.overUnder.under25.toFixed(2)}`,
+          `O2.5 Odds: Over ${this.data.odds!.overUnder!.over25.toFixed(2)} / Under ${this.data.odds!.overUnder!.under25.toFixed(2)}`,
           'neutral'
         )
       );

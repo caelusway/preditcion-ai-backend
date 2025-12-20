@@ -153,6 +153,28 @@ router.get('/home-stats', matchesController.getHomeStats);
 
 /**
  * @swagger
+ * /matches/backtest:
+ *   get:
+ *     tags:
+ *       - Matches
+ *     summary: Run backtest on historical matches (GET)
+ *     description: Evaluate prediction accuracy against finished matches
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *           maximum: 200
+ *         description: Number of matches to test
+ *     responses:
+ *       200:
+ *         description: Backtest results with accuracy metrics
+ */
+router.get('/backtest', matchesController.runBacktest);
+
+/**
+ * @swagger
  * /matches/{id}:
  *   get:
  *     tags:

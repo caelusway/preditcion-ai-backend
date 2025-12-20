@@ -30,9 +30,11 @@ const envSchema = z.object({
   RAPIDAPI_KEY: z.string().optional(),
   FOOTBALL_DATA_SOURCE: z.enum(['dummy', 'api']).default('dummy'),
 
-  // OpenAI for AI Analysis
+  // AI Model Configuration
   OPENAI_API_KEY: z.string().optional(),
-  AI_MODEL: z.string().default('gpt-4o-mini'),
+  GEMINI_API_KEY: z.string().optional(),
+  AI_PROVIDER: z.enum(['openai', 'gemini']).default('gemini'),
+  AI_MODEL: z.string().default('gemini-3-pro-preview'),
   ENABLE_AI_ANALYSIS: z.string().default('true').transform((v) => v === 'true'),
   PREDICTION_CACHE_TTL: z.string().default('1800').transform(Number), // 30 minutes
 

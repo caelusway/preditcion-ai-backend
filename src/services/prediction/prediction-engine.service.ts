@@ -1,9 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../../lib/prisma';
 import { logger } from '../../lib/logger';
+import { env } from '../../config/env';
 import { dataAggregatorService } from './data-aggregator.service';
 import { predictionCacheService } from './prediction-cache.service';
 import { aiAnalysisService } from './ai-analysis.service';
+import { gptPredictionService } from './gpt-prediction.service';
 
 // Calculators
 import { MatchOutcomeCalculator } from './calculators/match-outcome.calculator';
@@ -41,40 +43,63 @@ export class PredictionEngineService {
 
   /**
    * Generate a new prediction for a match
+   * Uses GPT model when available and enabled, otherwise falls back to statistical model
    */
-  async generatePrediction(matchId: string): Promise<CompletePrediction> {
-    logger.info({ matchId }, 'Generating prediction');
+  async generatePrediction(matchId: string, useGPT: boolean = true): Promise<CompletePrediction> {
+    logger.info({ matchId, useGPT }, 'Generating prediction');
 
     // Aggregate all data
     const data = await dataAggregatorService.aggregateMatchData(matchId);
 
-    // Run all calculators
-    const matchOutcomeCalc = new MatchOutcomeCalculator(data);
-    const bttsCalc = new BTTSCalculator(data);
-    const overUnderCalc = new OverUnderCalculator(data);
+    let matchOutcome: any;
+    let btts: any;
+    let overUnder: any;
+    let aiAnalysis: string;
+    let aiModel = 'hybrid-v1';
+
+    // Try GPT prediction first if enabled and available
+    const shouldUseGPT = useGPT && gptPredictionService.isAvailable() && env.ENABLE_AI_ANALYSIS;
+
+    if (shouldUseGPT) {
+      logger.info({ matchId }, 'Attempting GPT prediction');
+      const gptResult = await gptPredictionService.getPredictions(data);
+
+      if (gptResult) {
+        logger.info({ matchId }, 'Using GPT predictions');
+        matchOutcome = gptPredictionService.convertToMatchOutcome(gptResult, data);
+        btts = gptPredictionService.convertToBTTS(gptResult);
+        overUnder = gptPredictionService.convertToOverUnder(gptResult);
+        aiAnalysis = gptResult.analysis;
+        aiModel = 'gpt-4o-mini';
+      } else {
+        logger.warn({ matchId }, 'GPT prediction failed, falling back to statistical model');
+        // Fall back to statistical model
+        const result = this.runStatisticalModel(data);
+        matchOutcome = result.matchOutcome;
+        btts = result.btts;
+        overUnder = result.overUnder;
+        aiAnalysis = await aiAnalysisService.generateAnalysis(data, result);
+      }
+    } else {
+      // Use statistical model
+      const result = this.runStatisticalModel(data);
+      matchOutcome = result.matchOutcome;
+      btts = result.btts;
+      overUnder = result.overUnder;
+      aiAnalysis = await aiAnalysisService.generateAnalysis(data, result);
+    }
+
+    // These calculators still use statistical model (GPT doesn't do these)
     const correctScoreCalc = new CorrectScoreCalculator(data);
     const htftCalc = new HTFTCalculator(data);
     const statsCalc = new StatsCalculator(data);
 
-    // Calculate predictions
-    const matchOutcome = matchOutcomeCalc.calculate();
-    const btts = bttsCalc.calculate();
-    const overUnder = overUnderCalc.calculate();
     const correctScore = correctScoreCalc.calculate();
     const stats = statsCalc.calculate();
 
     // Set match outcome for HTFT calculator (for consistency)
     htftCalc.setMatchOutcome(matchOutcome);
     const htft = htftCalc.calculate();
-
-    // Generate AI analysis
-    const aiAnalysis = await aiAnalysisService.generateAnalysis(data, {
-      matchOutcome,
-      btts,
-      overUnder,
-      correctScore,
-      stats,
-    });
 
     // Calculate overall confidence
     const { confidence, confidenceScore } = this.calculateOverallConfidence(
@@ -127,7 +152,27 @@ export class PredictionEngineService {
   }
 
   /**
+   * Run statistical model (Poisson-based calculators)
+   */
+  private runStatisticalModel(data: AggregatedMatchData) {
+    const matchOutcomeCalc = new MatchOutcomeCalculator(data);
+    const bttsCalc = new BTTSCalculator(data);
+    const overUnderCalc = new OverUnderCalculator(data);
+    const correctScoreCalc = new CorrectScoreCalculator(data);
+    const statsCalc = new StatsCalculator(data);
+
+    return {
+      matchOutcome: matchOutcomeCalc.calculate(),
+      btts: bttsCalc.calculate(),
+      overUnder: overUnderCalc.calculate(),
+      correctScore: correctScoreCalc.calculate(),
+      stats: statsCalc.calculate(),
+    };
+  }
+
+  /**
    * Calculate overall confidence from all predictions
+   * OPTIMIZED: Added odds agreement factor for better calibration
    */
   private calculateOverallConfidence(
     matchOutcome: any,
@@ -138,13 +183,13 @@ export class PredictionEngineService {
     stats: any,
     data: AggregatedMatchData
   ): { confidence: ConfidenceLevel; confidenceScore: number } {
-    // Weighted average of calculator confidences
+    // OPTIMIZED: Adjusted weights - reduced correct score and htft (harder to predict)
     const weights = {
-      matchOutcome: 0.30,
+      matchOutcome: 0.35,   // Increased from 0.30
       btts: 0.15,
-      overUnder: 0.20,
-      correctScore: 0.10,
-      htft: 0.10,
+      overUnder: 0.25,      // Increased from 0.20
+      correctScore: 0.05,   // Reduced from 0.10 - very hard to predict
+      htft: 0.05,           // Reduced from 0.10 - very hard to predict
       stats: 0.15,
     };
 
@@ -156,9 +201,12 @@ export class PredictionEngineService {
       htft.confidence * weights.htft +
       stats.confidence * weights.stats;
 
-    // Apply data quality multiplier
+    // OPTIMIZED v2: More direct formula - primarily use calculator confidences
     const qualityMultiplier = data.dataQuality.score / 100;
-    let adjustedScore = weightedSum * qualityMultiplier;
+    const oddsBonus = data.odds?.matchWinner?.home ? 15 : (data.odds ? 5 : 0); // More bonus for 1X2 odds
+
+    // Direct weighted sum with quality adjustment
+    let adjustedScore = weightedSum * qualityMultiplier + oddsBonus;
 
     // Algorithm agreement bonus (if all point same direction)
     const agreementBonus = this.calculateAgreementBonus(matchOutcome, btts, overUnder);

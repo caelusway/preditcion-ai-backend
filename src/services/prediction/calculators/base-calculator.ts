@@ -79,10 +79,10 @@ export abstract class BaseCalculator {
    * Uses combination of team stats and opponent stats
    */
   protected calculateExpectedGoals(teamStats: TeamSeasonStats | null, opponentStats: TeamSeasonStats | null, isHome: boolean): number {
-    // Default expected goals if no stats
-    const DEFAULT_XG = 1.3;
+    // Default expected goals if no stats - based on Top 5 leagues 2023-24 average
+    const DEFAULT_XG = 1.40;
 
-    if (!teamStats) return DEFAULT_XG;
+    if (!teamStats) return isHome ? DEFAULT_XG * 1.08 : DEFAULT_XG;
 
     // Team's scoring rate
     const teamScoringAvg = isHome
@@ -96,50 +96,56 @@ export abstract class BaseCalculator {
         : opponentStats.goals.against.average.home
       : DEFAULT_XG;
 
-    // League average (approximate)
-    const LEAGUE_AVG = 1.4;
+    // Top 5 European leagues average goals per team per game: ~1.40-1.50
+    // Using 1.42 as calibrated baseline
+    const LEAGUE_AVG = 1.42;
 
-    // Calculate xG as adjustment from average
+    // Calculate xG using Dixon-Coles style adjustment
     // (Team attack strength * Opponent defense weakness) * League average
-    const attackStrength = teamScoringAvg / LEAGUE_AVG;
-    const defenseWeakness = opponentConcedingAvg / LEAGUE_AVG;
+    const attackStrength = teamScoringAvg > 0 ? teamScoringAvg / LEAGUE_AVG : 1.0;
+    const defenseWeakness = opponentConcedingAvg > 0 ? opponentConcedingAvg / LEAGUE_AVG : 1.0;
 
     let xG = attackStrength * defenseWeakness * LEAGUE_AVG;
 
-    // Apply home advantage (+5% for home team - reduced from 10% based on modern data)
+    // Home advantage: European data shows ~8% goal increase at home
+    // Post-COVID data shows this has decreased slightly to 6-7%
     if (isHome) {
-      xG *= 1.05;
+      xG *= 1.08;
     }
 
-    // Cap between 0.3 and 4.0
-    return Math.max(0.3, Math.min(4.0, xG));
+    // Cap between 0.4 and 3.5 (more realistic range)
+    return Math.max(0.4, Math.min(3.5, xG));
   }
 
   /**
    * Calculate form strength from recent matches (0-100)
    * Weights recent matches more heavily
+   * IMPROVED: Better draw valuation (50 points = neutral, not 40)
    */
   protected calculateFormStrength(recentMatches: RecentMatchData[]): number {
     if (recentMatches.length === 0) return 50; // Neutral
 
     // Weights for recency (most recent = highest weight)
-    const weights = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.3];
+    // Steeper decay to emphasize recent form more
+    const weights = [1.0, 0.85, 0.72, 0.61, 0.52, 0.44, 0.37, 0.32, 0.27, 0.23];
 
     let totalWeight = 0;
     let weightedScore = 0;
 
     recentMatches.slice(0, 10).forEach((match, index) => {
-      const weight = weights[index] || 0.3;
+      const weight = weights[index] || 0.2;
       totalWeight += weight;
 
       let score = 0;
+      // Win = 100, Draw = 50 (neutral), Loss = 0
+      // This better reflects actual point system (3-1-0)
       if (match.result === 'W') score = 100;
-      else if (match.result === 'D') score = 40;
+      else if (match.result === 'D') score = 50;  // Changed from 40 to 50
       else score = 0;
 
-      // Bonus for high-scoring wins, penalty for heavy defeats
+      // Goal difference adjustment (smaller effect)
       const goalDiff = match.goalsScored - match.goalsConceded;
-      score += goalDiff * 5;
+      score += goalDiff * 3; // Reduced from 5 to 3
       score = Math.max(0, Math.min(100, score));
 
       weightedScore += score * weight;

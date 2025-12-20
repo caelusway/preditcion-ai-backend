@@ -20,6 +20,9 @@ export class BTTSCalculator extends BaseCalculator {
     // BTTS Yes = P(home scores) * P(away scores)
     let bttsYes = (homeScoringProb / 100) * (awayScoringProb / 100) * 100;
 
+    // Check if we have valid odds
+    const hasValidOdds = this.data.odds?.btts && this.data.odds.btts.yes > 0;
+
     // Adjust with H2H data if available
     if (this.data.headToHead && this.data.headToHead.total > 0) {
       const h2hBTTSRate = (this.data.headToHead.bttsCount / this.data.headToHead.total) * 100;
@@ -32,24 +35,25 @@ export class BTTSCalculator extends BaseCalculator {
         )
       );
 
-      // Blend: 70% calculated, 30% H2H
-      bttsYes = bttsYes * 0.7 + h2hBTTSRate * 0.3;
+      // Blend weights depend on whether we have odds
+      const h2hWeight = hasValidOdds ? 0.20 : 0.30;
+      bttsYes = bttsYes * (1 - h2hWeight) + h2hBTTSRate * h2hWeight;
     }
 
     // Adjust with odds if available
-    if (this.data.odds?.btts) {
-      const oddsYes = this.oddsToImpliedProbability(this.data.odds.btts.yes);
-      const oddsNo = this.oddsToImpliedProbability(this.data.odds.btts.no);
+    if (hasValidOdds) {
+      const oddsYes = this.oddsToImpliedProbability(this.data.odds!.btts!.yes);
+      const oddsNo = this.oddsToImpliedProbability(this.data.odds!.btts!.no);
       const oddsTotal = oddsYes + oddsNo;
       const normalizedOddsYes = (oddsYes / oddsTotal) * 100;
 
-      // Blend: 80% calculated, 20% odds
-      bttsYes = bttsYes * 0.8 + normalizedOddsYes * 0.2;
+      // Blend calculated with odds - odds are very accurate for BTTS
+      bttsYes = bttsYes * 0.65 + normalizedOddsYes * 0.35;
 
       factors.push(
         this.createFactor(
           'odds',
-          `BTTS Odds: Yes ${this.data.odds.btts.yes.toFixed(2)} / No ${this.data.odds.btts.no.toFixed(2)}`,
+          `BTTS Odds: Yes ${this.data.odds!.btts!.yes.toFixed(2)} / No ${this.data.odds!.btts!.no.toFixed(2)}`,
           'neutral'
         )
       );
