@@ -26,6 +26,8 @@ import { footballAPIService, TOP_5_LEAGUES, LEAGUE_IDS } from '../services/footb
 import { predictionEngineService } from '../services/prediction/prediction-engine.service';
 import { backtestService } from '../services/prediction/backtest.service';
 import { logger } from '../lib/logger';
+import { addIsOccuredToPredictions } from '../utils/prediction-evaluator';
+import { formatAIPredictions } from '../utils/prediction-formatter';
 
 export class MatchesController {
   // GET /matches - Get all matches grouped by league
@@ -432,25 +434,73 @@ export class MatchesController {
 
       // Use stored prediction if available, otherwise generate dynamically
       let prediction;
-      if (match.predictions && match.predictions.length > 0) {
-        const dbPrediction = match.predictions[0];
+      let enginePrediction = null;
+
+      // Try to get prediction from engine (for real AI predictions)
+      try {
+        enginePrediction = await predictionEngineService.getPrediction(id);
         prediction = {
-          id: dbPrediction.id,
-          homeWinProbability: dbPrediction.homeWinProbability,
-          drawProbability: dbPrediction.drawProbability,
-          awayWinProbability: dbPrediction.awayWinProbability,
-          aiConfidence: dbPrediction.confidence,
-          aiAnalysis: dbPrediction.reasoning,
-          quickStats: dbPrediction.factors,
+          id: enginePrediction.id,
+          homeWinProbability: enginePrediction.matchOutcome.homeWin,
+          drawProbability: enginePrediction.matchOutcome.draw,
+          awayWinProbability: enginePrediction.matchOutcome.awayWin,
+          aiConfidence: enginePrediction.confidence,
+          aiAnalysis: enginePrediction.aiAnalysis,
+          quickStats: enginePrediction.factors,
         };
-      } else {
-        // Fallback: generate prediction dynamically
-        prediction = generatePrediction(
-          { id: match.homeTeam.id, name: match.homeTeam.name },
-          { id: match.awayTeam.id, name: match.awayTeam.name }
-        );
-        prediction.id = `pred-${match.id}`;
+      } catch (predErr) {
+        logger.warn({ error: predErr, matchId: id }, 'Prediction engine failed, using fallback');
+
+        if (match.predictions && match.predictions.length > 0) {
+          const dbPrediction = match.predictions[0];
+          prediction = {
+            id: dbPrediction.id,
+            homeWinProbability: dbPrediction.homeWinProbability,
+            drawProbability: dbPrediction.drawProbability,
+            awayWinProbability: dbPrediction.awayWinProbability,
+            aiConfidence: dbPrediction.confidence,
+            aiAnalysis: dbPrediction.reasoning,
+            quickStats: dbPrediction.factors,
+          };
+        } else {
+          // Fallback: generate prediction dynamically
+          const fallbackPred = generatePrediction(
+            { id: match.homeTeam.id, name: match.homeTeam.name },
+            { id: match.awayTeam.id, name: match.awayTeam.name }
+          );
+          prediction = {
+            id: `pred-${match.id}`,
+            ...fallbackPred,
+          };
+        }
       }
+
+      // Generate aiPredictions from engine or use dummy fallback
+      let formattedPredictions;
+      if (enginePrediction) {
+        // Get odds data for formatting
+        const oddsData = enginePrediction.dataQuality?.missingData?.includes('odds')
+          ? null
+          : {
+              matchWinner: {
+                home: matchHeaderOdds.homeWin.value,
+                draw: matchHeaderOdds.draw.value,
+                away: matchHeaderOdds.awayWin.value,
+              },
+            };
+
+        formattedPredictions = formatAIPredictions(enginePrediction, oddsData);
+      } else {
+        formattedPredictions = aiPredictions;
+      }
+
+      // Add isOccured to aiPredictions for finished matches
+      const predictionsWithOccured = addIsOccuredToPredictions(
+        formattedPredictions,
+        match.homeScore,
+        match.awayScore,
+        match.status
+      );
 
       return res.status(200).json({
         match: {
@@ -462,7 +512,7 @@ export class MatchesController {
         homeTeamRecentMatches: homeRecentMatches,
         awayTeamRecentMatches: awayRecentMatches,
         standings: leagueStandings || standings,
-        aiPredictions,
+        aiPredictions: predictionsWithOccured,
         matchHeaderOdds,
         marketValues,
         scorePredictions,
