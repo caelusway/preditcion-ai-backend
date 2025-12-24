@@ -22,7 +22,7 @@ import {
   createPaginatedResponse,
 } from '../utils/pagination';
 import { generatePrediction } from '../utils/generate-prediction';
-import { footballAPIService, TOP_5_LEAGUES, LEAGUE_IDS } from '../services/football-api.service';
+import { footballAPIService, ALL_LEAGUES, LEAGUE_IDS } from '../services/football-api.service';
 import { predictionEngineService } from '../services/prediction/prediction-engine.service';
 import { backtestService } from '../services/prediction/backtest.service';
 import { logger } from '../lib/logger';
@@ -43,7 +43,7 @@ export class MatchesController {
       if (env.FOOTBALL_DATA_SOURCE === 'api') {
         try {
           // Fetch fixtures from API
-          const fixtures = await footballAPIService.getFixturesByDate(targetDate, TOP_5_LEAGUES);
+          const fixtures = await footballAPIService.getFixturesByDate(targetDate, ALL_LEAGUES);
 
           // Group by league
           const leagueMap = new Map<string, {
@@ -887,7 +887,7 @@ export class MatchesController {
 
           while (currentDate <= endDate) {
             const dateStr = currentDate.toISOString().split('T')[0];
-            const fixtures = await footballAPIService.getFixturesByDate(dateStr, TOP_5_LEAGUES);
+            const fixtures = await footballAPIService.getFixturesByDate(dateStr, ALL_LEAGUES);
 
             // Filter only finished matches
             const finishedFixtures = fixtures.filter(f =>

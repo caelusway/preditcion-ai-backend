@@ -94,11 +94,17 @@ interface Statistics {
 
 // League IDs for Top 5 European Leagues
 export const LEAGUE_IDS = {
+  // Top 5 Leagues
   PREMIER_LEAGUE: 39,
   LA_LIGA: 140,
   SERIE_A: 135,
   BUNDESLIGA: 78,
   LIGUE_1: 61,
+  // European Cups & International
+  CHAMPIONS_LEAGUE: 2,
+  EUROPA_LEAGUE: 3,
+  CONFERENCE_LEAGUE: 848,
+  WORLD_CUP: 1,
 } as const;
 
 export const TOP_5_LEAGUES = [
@@ -108,6 +114,16 @@ export const TOP_5_LEAGUES = [
   LEAGUE_IDS.BUNDESLIGA,
   LEAGUE_IDS.LIGUE_1,
 ];
+
+export const EUROPEAN_CUPS = [
+  LEAGUE_IDS.CHAMPIONS_LEAGUE,
+  LEAGUE_IDS.EUROPA_LEAGUE,
+  LEAGUE_IDS.CONFERENCE_LEAGUE,
+  LEAGUE_IDS.WORLD_CUP,
+];
+
+// All supported leagues and tournaments
+export const ALL_LEAGUES = [...TOP_5_LEAGUES, ...EUROPEAN_CUPS];
 
 interface LeagueInfo {
   id: number;
@@ -407,11 +423,17 @@ export class FootballAPIService {
     }> = [];
 
     const leagueNames: Record<number, { name: string; country: string }> = {
+      // Top 5 Leagues
       [LEAGUE_IDS.PREMIER_LEAGUE]: { name: 'Premier League', country: 'England' },
       [LEAGUE_IDS.LA_LIGA]: { name: 'La Liga', country: 'Spain' },
       [LEAGUE_IDS.SERIE_A]: { name: 'Serie A', country: 'Italy' },
       [LEAGUE_IDS.BUNDESLIGA]: { name: 'Bundesliga', country: 'Germany' },
       [LEAGUE_IDS.LIGUE_1]: { name: 'Ligue 1', country: 'France' },
+      // European Cups & International
+      [LEAGUE_IDS.CHAMPIONS_LEAGUE]: { name: 'Champions League', country: 'Europe' },
+      [LEAGUE_IDS.EUROPA_LEAGUE]: { name: 'Europa League', country: 'Europe' },
+      [LEAGUE_IDS.CONFERENCE_LEAGUE]: { name: 'Conference League', country: 'Europe' },
+      [LEAGUE_IDS.WORLD_CUP]: { name: 'World Cup', country: 'International' },
     };
 
     for (const leagueId of leagueIds) {

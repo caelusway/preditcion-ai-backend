@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { footballAPIService, TOP_5_LEAGUES, LEAGUE_IDS } from './football-api.service';
+import { footballAPIService, ALL_LEAGUES, LEAGUE_IDS } from './football-api.service';
 import { logger } from '../lib/logger';
 
 interface SelectableLeague {
@@ -37,11 +37,17 @@ export class TeamService {
         const leagueMap = new Map<string, SelectableLeague>();
 
         const leagueInfo: Record<string, { id: number; country: string; logo: string }> = {
+          // Top 5 Leagues
           'Premier League': { id: LEAGUE_IDS.PREMIER_LEAGUE, country: 'England', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.PREMIER_LEAGUE}.png` },
           'La Liga': { id: LEAGUE_IDS.LA_LIGA, country: 'Spain', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.LA_LIGA}.png` },
           'Serie A': { id: LEAGUE_IDS.SERIE_A, country: 'Italy', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.SERIE_A}.png` },
           'Bundesliga': { id: LEAGUE_IDS.BUNDESLIGA, country: 'Germany', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.BUNDESLIGA}.png` },
           'Ligue 1': { id: LEAGUE_IDS.LIGUE_1, country: 'France', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.LIGUE_1}.png` },
+          // European Cups & International
+          'UEFA Champions League': { id: LEAGUE_IDS.CHAMPIONS_LEAGUE, country: 'Europe', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.CHAMPIONS_LEAGUE}.png` },
+          'UEFA Europa League': { id: LEAGUE_IDS.EUROPA_LEAGUE, country: 'Europe', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.EUROPA_LEAGUE}.png` },
+          'UEFA Europa Conference League': { id: LEAGUE_IDS.CONFERENCE_LEAGUE, country: 'Europe', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.CONFERENCE_LEAGUE}.png` },
+          'World Cup': { id: LEAGUE_IDS.WORLD_CUP, country: 'International', logo: `https://media.api-sports.io/football/leagues/${LEAGUE_IDS.WORLD_CUP}.png` },
         };
 
         // Track teams by name within each league to avoid duplicates
@@ -101,7 +107,7 @@ export class TeamService {
    * Fetch teams from API and cache in database
    */
   async fetchAndCacheTeams(): Promise<{ leagues: SelectableLeague[] }> {
-    const apiData = await footballAPIService.getTeamsForLeagues(TOP_5_LEAGUES, 2024);
+    const apiData = await footballAPIService.getTeamsForLeagues(ALL_LEAGUES, 2024);
     const leagues: SelectableLeague[] = [];
 
     for (const leagueData of apiData) {

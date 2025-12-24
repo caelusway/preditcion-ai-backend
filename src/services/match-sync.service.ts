@@ -1,4 +1,4 @@
-import { footballAPIService, TOP_5_LEAGUES, LEAGUE_IDS } from './football-api.service';
+import { footballAPIService, ALL_LEAGUES, LEAGUE_IDS } from './football-api.service';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
 import { env } from '../config/env';
@@ -567,16 +567,16 @@ export class MatchSyncService {
   }
 
   /**
-   * Sync teams for all Top 5 leagues
+   * Sync teams for all all supported leagues
    */
   async syncTeamsForAllLeagues(): Promise<void> {
-    logger.info('Starting team sync for Top 5 leagues...');
+    logger.info('Starting team sync for all supported leagues...');
 
     const syncLog = await prisma.syncLog.create({
       data: {
         syncType: 'teams',
         status: 'started',
-        leagueIds: TOP_5_LEAGUES.join(','),
+        leagueIds: ALL_LEAGUES.join(','),
       },
     });
 
@@ -585,7 +585,7 @@ export class MatchSyncService {
 
     try {
       const season = this.getCurrentSeason();
-      const leagueTeams = await footballAPIService.getTeamsForLeagues(TOP_5_LEAGUES, season);
+      const leagueTeams = await footballAPIService.getTeamsForLeagues(ALL_LEAGUES, season);
 
       for (const league of leagueTeams) {
         for (const team of league.teams) {
@@ -641,16 +641,16 @@ export class MatchSyncService {
   }
 
   /**
-   * Sync upcoming fixtures for next N days for all Top 5 leagues
+   * Sync upcoming fixtures for next N days for all all supported leagues
    */
   async syncUpcomingFixtures(days: number = 7): Promise<{ processed: number; failed: number }> {
-    logger.info({ days }, 'Starting upcoming fixtures sync for Top 5 leagues...');
+    logger.info({ days }, 'Starting upcoming fixtures sync for all supported leagues...');
 
     const syncLog = await prisma.syncLog.create({
       data: {
         syncType: 'fixtures',
         status: 'started',
-        leagueIds: TOP_5_LEAGUES.join(','),
+        leagueIds: ALL_LEAGUES.join(','),
       },
     });
 
@@ -668,7 +668,7 @@ export class MatchSyncService {
 
       for (const date of dates) {
         try {
-          const fixtures = await footballAPIService.getFixturesByDate(date, TOP_5_LEAGUES);
+          const fixtures = await footballAPIService.getFixturesByDate(date, ALL_LEAGUES);
 
           for (const fixture of fixtures) {
             try {
@@ -927,7 +927,7 @@ export class MatchSyncService {
       data: {
         syncType: 'fixtures',
         status: 'started',
-        leagueIds: TOP_5_LEAGUES.join(','),
+        leagueIds: ALL_LEAGUES.join(','),
       },
     });
 
@@ -945,7 +945,7 @@ export class MatchSyncService {
 
       for (const date of dates) {
         try {
-          const fixtures = await footballAPIService.getFixturesByDate(date, TOP_5_LEAGUES);
+          const fixtures = await footballAPIService.getFixturesByDate(date, ALL_LEAGUES);
 
           // Only process finished matches
           const finishedFixtures = fixtures.filter(f =>
@@ -1057,7 +1057,7 @@ export class MatchSyncService {
   }
 
   /**
-   * Full sync for Top 5 leagues: upcoming fixtures + odds + finished matches
+   * Full sync for all supported leagues: upcoming fixtures + odds + finished matches
    * This is the main method to be called by scheduler
    */
   async syncAllMatches(): Promise<{
@@ -1065,7 +1065,7 @@ export class MatchSyncService {
     finished: { processed: number; failed: number };
     odds: { processed: number; failed: number };
   }> {
-    logger.info('Starting full match sync for Top 5 leagues...');
+    logger.info('Starting full match sync for all supported leagues...');
 
     try {
       // 1. Sync teams first (if needed)
