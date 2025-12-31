@@ -1,0 +1,67 @@
+Date,League,Home Team,Away Team,Home Odds,Draw Odds,Away Odds,LLM Prediction,Confidence %,Reasoning,Actual Result,Score,Correct,Profit
+2025-12-30,"Premier League","Manchester United","Wolves",1.39,5.10,7.00,1,90,"rule1",X,1-1,No,-1.00
+2025-12-30,"Premier League","Arsenal","Aston Villa",1.44,4.70,6.50,1,70,"rule5",1,4-1,Yes,0.44
+2025-12-30,"Premier League","Chelsea","Bournemouth",1.53,4.50,5.40,X,85,"rule3",X,2-2,Yes,3.50
+2025-12-30,"Premier League","Burnley","Newcastle",5.70,4.10,1.57,2,90,"rule1",2,1-3,Yes,0.57
+2025-12-30,"Premier League","West Ham","Brighton",3.45,3.70,2.00,2,85,"rule2",X,2-2,No,-1.00
+2025-12-30,"Premier League","Nottingham Forest","Everton",2.04,3.25,3.85,2,75,"rule4",2,0-2,Yes,2.85
+2025-12-29,"Serie A","AS Roma","Genoa",1.60,3.65,6.25,1,70,"rule6",1,3-1,Yes,0.60
+2025-12-28,"Serie A","Atalanta","Inter",3.90,3.55,1.91,2,85,"rule2",2,0-1,Yes,0.91
+2025-12-28,"Serie A","Bologna","Sassuolo",1.93,3.35,4.10,1,70,"rule6",X,1-1,No,-1.00
+2025-12-28,"Premier League","Crystal Palace","Tottenham",2.22,3.35,3.20,1,70,"rule6",2,0-1,No,-1.00
+2025-12-28,"Premier League","Sunderland","Leeds",2.74,3.05,2.74,X,60,"anti-pattern",X,1-1,Yes,2.05
+2025-12-28,"Serie A","Cremonese","Napoli",6.60,3.75,1.55,2,90,"rule1",2,0-2,Yes,0.55
+2025-12-28,"Serie A","AC Milan","Verona",1.37,4.70,8.40,1,90,"rule1",1,3-0,Yes,0.37
+2025-12-27,"Serie A","Pisa","Juventus",7.70,4.10,1.46,2,90,"rule1",2,0-2,Yes,0.46
+2025-12-27,"Premier League","Chelsea","Aston Villa",1.83,3.80,3.95,1,70,"rule6",2,1-2,No,-1.00
+2025-12-27,"Serie A","Udinese","Lazio",3.25,3.00,2.38,2,85,"rule2",X,1-1,No,-1.00
+2025-12-27,"Premier League","Arsenal","Brighton",1.35,5.10,8.25,1,90,"rule1",1,2-1,Yes,0.35
+2025-12-27,"Premier League","Brentford","Bournemouth",2.30,3.50,2.94,1,70,"rule7",1,4-1,Yes,1.30
+2025-12-27,"Premier League","West Ham","Fulham",2.72,3.30,2.56,2,70,"rule7",2,0-1,Yes,1.56
+2025-12-27,"Premier League","Liverpool","Wolves",1.24,5.90,12.00,1,90,"rule1",1,2-1,Yes,0.24
+2025-12-27,"Premier League","Burnley","Everton",3.55,3.20,2.16,2,85,"rule2",X,0-0,No,-1.00
+2025-12-27,"Serie A","Lecce","Como",4.60,3.35,1.83,2,85,"rule2",2,0-3,Yes,0.83
+2025-12-27,"Serie A","Torino","Cagliari",1.94,3.30,4.10,1,70,"rule6",2,1-2,No,-1.00
+2025-12-27,"Premier League","Nottingham Forest","Manchester City",5.50,4.30,1.55,2,90,"rule1",2,1-2,Yes,0.55
+2025-12-27,"Serie A","Parma","Fiorentina",3.25,3.10,2.34,2,85,"rule2",1,1-0,No,-1.00
+2025-12-26,"Premier League","Manchester United","Newcastle",2.58,3.55,2.58,1,50,"rule7",1,1-0,Yes,1.58
+2025-12-22,"La Liga","Athletic Club","Espanyol",1.83,3.30,4.75,1,70,"rule6",2,1-2,No,-1.00
+2025-12-22,"Premier League","Fulham","Nottingham Forest",2.50,3.15,2.90,2,65,"rule4",1,1-0,No,-1.00
+2025-12-21,"La Liga","Real Betis","Getafe",1.76,3.20,5.60,1,70,"rule6",1,4-0,Yes,0.76
+2025-12-21,"Serie A","Genoa","Atalanta",3.65,3.10,2.14,2,85,"rule2",2,0-1,Yes,1.14
+2025-12-21,"La Liga","Elche","Rayo Vallecano",2.54,3.05,2.96,1,70,"rule7",1,4-0,Yes,1.54
+2025-12-21,"Serie A","Fiorentina","Udinese",2.12,3.20,3.65,1,70,"rule6",1,5-1,Yes,1.12
+2025-12-21,"Premier League","Aston Villa","Manchester United",2.12,3.60,3.20,1,70,"rule6",1,2-1,Yes,1.12
+2025-12-21,"Bundesliga","1. FC Heidenheim","Bayern München",16.50,8.80,1.13,2,90,"rule1",2,0-4,Yes,0.13
+2025-12-21,"La Liga","Villarreal","Barcelona",3.80,4.35,1.76,2,85,"rule2",2,0-2,Yes,0.76
+2025-12-21,"Bundesliga","FSV Mainz 05","FC St. Pauli",2.00,3.25,3.90,2,65,"rule4",X,0-0,No,-1.00
+2025-12-21,"Serie A","Sassuolo","Torino",2.36,3.10,3.15,1,70,"rule7",2,0-1,No,-1.00
+2025-12-21,"La Liga","Girona","Atletico Madrid",4.75,3.90,1.69,2,85,"rule2",2,0-3,Yes,0.69
+2025-12-21,"Serie A","Cagliari","Pisa",2.16,3.05,3.75,1,70,"rule6",X,2-2,No,-1.00
+2025-12-20,"Premier League","Leeds","Crystal Palace",2.70,3.15,2.70,X,60,"anti-pattern",1,4-1,No,-1.00
+2025-12-20,"La Liga","Real Madrid","Sevilla",1.21,7.25,10.75,1,90,"rule1",1,2-0,Yes,0.21
+2025-12-20,"Premier League","Everton","Arsenal",6.25,3.80,1.57,2,90,"rule1",2,0-1,Yes,0.57
+2025-12-20,"Serie A","Juventus","AS Roma",2.00,3.20,4.10,1,70,"rule6",1,2-1,Yes,1.00
+2025-12-20,"Premier League","Tottenham","Liverpool",3.60,3.60,1.99,2,85,"rule2",2,1-2,Yes,0.99
+2025-12-20,"La Liga","Osasuna","Alaves",2.28,2.92,3.55,1,70,"rule7",1,3-0,Yes,1.28
+2025-12-20,"Bundesliga","RB Leipzig","Bayer Leverkusen",2.24,3.60,2.98,2,65,"rule4",2,1-3,Yes,1.98
+2025-12-20,"Serie A","Lazio","Cremonese",1.60,3.65,6.20,X,75,"rule3",X,0-0,Yes,2.65
+2025-12-20,"La Liga","Levante","Real Sociedad",2.92,3.25,2.45,2,85,"rule2",X,1-1,No,-1.00
+2025-12-20,"Premier League","Wolves","Brentford",3.50,3.30,2.12,2,85,"rule2",2,0-2,Yes,1.12
+2025-12-20,"Premier League","Brighton","Sunderland",1.65,3.75,5.25,X,85,"rule3",X,0-0,Yes,2.75
+2025-12-20,"Premier League","Bournemouth","Burnley",1.53,4.40,5.60,X,85,"rule3",X,1-1,Yes,3.40
+
+
+SUMMARY
+Total Matches,51
+Correct,35
+Accuracy,68.6%
+Profit,25.92 units
+ROI,50.8%
+
+HIGH CONFIDENCE (>=70%)
+Bets,45
+Correct,32
+Accuracy,71.1%
+Profit,23.31 units
+ROI,51.8%

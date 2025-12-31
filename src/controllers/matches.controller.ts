@@ -279,6 +279,7 @@ export class MatchesController {
         include: {
           homeTeam: true,
           awayTeam: true,
+          odds: true,
         },
         orderBy: {
           kickoffTime: 'asc',
@@ -286,9 +287,36 @@ export class MatchesController {
         take: 20,
       });
 
+      // Format matches with odds
+      const formattedMatches = matches.map(match => ({
+        id: match.id,
+        apiId: match.apiId,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        kickoffTime: match.kickoffTime,
+        status: match.status,
+        homeScore: match.homeScore,
+        awayScore: match.awayScore,
+        venue: match.venue,
+        referee: match.referee,
+        league: match.league,
+        round: match.round,
+        odds: match.odds ? {
+          homeWin: match.odds.homeWinOdds,
+          draw: match.odds.drawOdds,
+          awayWin: match.odds.awayWinOdds,
+          over25: match.odds.over25Odds,
+          under25: match.odds.under25Odds,
+          bttsYes: match.odds.bttsYesOdds,
+          bttsNo: match.odds.bttsNoOdds,
+          bookmaker: match.odds.bookmaker,
+          updatedAt: match.odds.updatedAt,
+        } : null,
+      }));
+
       return res.status(200).json({
-        data: matches,
-        count: matches.length,
+        data: formattedMatches,
+        count: formattedMatches.length,
       });
     } catch (error) {
       next(error);
